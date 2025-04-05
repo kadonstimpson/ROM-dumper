@@ -1,4 +1,4 @@
-25221759757249505
+25228735043291066
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -37533,6 +37533,20 @@ Surface mounted pin header SMD 2x40 2.54mm double row
 0
 80
 80
+Connector_PinHeader_2.54mm
+STM32F072B-DISCO
+
+
+0
+66
+66
+Connector_PinHeader_2.54mm
+Untitled
+
+
+0
+66
+66
 Connector_PinSocket_1.00mm
 PinSocket_1x02_P1.00mm_Vertical
 Through hole straight socket strip, 1x02, 1.00mm pitch, single row (https://gct.co/files/drawings/bc065.pdf), script generated
@@ -59051,6 +59065,20 @@ Fuse Fuseholder TR5 Littelfuse/Wickmann No. 460 No560
 0
 2
 2
+Gameboy
+Game_Boy_Advance_Edge_Connector
+
+
+0
+34
+32
+Gameboy
+Game_Boy_Edge_Connector
+
+
+0
+160
+32
 Heatsink
 Heatsink_35x26mm_1xFixation3mm_Fischer-SK486-35
 Heatsink, 35mm x 26mm, 1x Fixation 3mm, Fischer SK486-35

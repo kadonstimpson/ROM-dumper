@@ -4048,6 +4048,16 @@
 	)
 	(wire
 		(pts
+			(xy 171.45 54.61) (xy 171.45 55.88)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1551133d-c57c-4dc8-8037-3e42d3edbe91")
+	)
+	(wire
+		(pts
 			(xy 130.81 78.74) (xy 175.26 78.74)
 		)
 		(stroke
@@ -4348,7 +4358,7 @@
 	)
 	(wire
 		(pts
-			(xy 237.49 43.18) (xy 245.11 43.18)
+			(xy 237.49 43.18) (xy 246.38 43.18)
 		)
 		(stroke
 			(width 0)
@@ -5028,6 +5038,16 @@
 	)
 	(wire
 		(pts
+			(xy 171.45 55.88) (xy 175.26 55.88)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b83e03ef-194c-4925-bb0e-933a6cabbd24")
+	)
+	(wire
+		(pts
 			(xy 154.94 38.1) (xy 154.94 63.5)
 		)
 		(stroke
@@ -5600,28 +5620,6 @@
 			)
 		)
 	)
-	(global_label "CART_VCC"
-		(shape input)
-		(at 175.26 55.88 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "1b52840f-d038-41c4-ae80-cd78c526f5c8")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 163.0824 55.88 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-				(hide yes)
-			)
-		)
-	)
 	(global_label "SPI2_SCK"
 		(shape input)
 		(at 220.98 81.28 180)
@@ -5662,28 +5660,6 @@
 					(size 1.27 1.27)
 				)
 				(justify right)
-				(hide yes)
-			)
-		)
-	)
-	(global_label "CART_VCC"
-		(shape output)
-		(at 245.11 43.18 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "2106d542-2505-4721-851e-31cd21309951")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 257.2876 43.18 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
 				(hide yes)
 			)
 		)
@@ -6106,7 +6082,7 @@
 			)
 		)
 	)
-	(global_label "SP1_NSS"
+	(global_label "SPI1_NSS"
 		(shape input)
 		(at 234.95 143.51 270)
 		(fields_autoplaced yes)
@@ -6118,7 +6094,7 @@
 		)
 		(uuid "559aed45-3aec-43e4-a7c1-1e014da1788d")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 234.95 154.9013 90)
+			(at 234.95 155.5061 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6766,7 +6742,7 @@
 			)
 		)
 	)
-	(global_label "SP2_NSS"
+	(global_label "SPI2_NSS"
 		(shape input)
 		(at 262.89 143.51 270)
 		(fields_autoplaced yes)
@@ -6778,7 +6754,7 @@
 		)
 		(uuid "a4499f27-ecce-4975-9af3-413fc95432fa")
 		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 262.89 154.9013 90)
+			(at 262.89 155.5061 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7385,7 +7361,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric"
 			(at 114.3 20.32 0)
 			(effects
 				(font
@@ -7452,7 +7428,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric"
 			(at 128.27 157.48 0)
 			(effects
 				(font
@@ -7520,7 +7496,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x06_P2.54mm_Vertical"
 			(at 234.95 138.43 0)
 			(effects
 				(font
@@ -7861,7 +7837,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric"
 			(at 127 113.03 0)
 			(effects
 				(font
@@ -7928,7 +7904,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric"
 			(at 113.03 113.03 0)
 			(effects
 				(font
@@ -7988,7 +7964,7 @@
 				(hide yes)
 			)
 		)
-		(property "Value" "+5V"
+		(property "Value" "V_CART"
 			(at 123.19 14.224 0)
 			(effects
 				(font
@@ -8708,7 +8684,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x06_P2.54mm_Vertical"
 			(at 262.89 138.43 0)
 			(effects
 				(font
@@ -9042,7 +9018,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Connector_GameBoy:GameBoy_GamePak_CGB-002_P1.50mm_Edge"
+		(property "Footprint" "Gameboy:Game_Boy_Advance_Edge_Connector"
 			(at 177.8 71.12 0)
 			(effects
 				(font
@@ -9306,6 +9282,71 @@
 	)
 	(symbol
 		(lib_id "power:+3.3V")
+		(at 246.38 43.18 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "792d1cad-0e0e-4588-a33e-597d8fb4d7cd")
+		(property "Reference" "#PWR037"
+			(at 246.38 46.99 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "V_CART"
+			(at 246.38 39.624 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 246.38 43.18 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 246.38 43.18 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
+			(at 246.38 43.18 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "246a84bf-2276-4a46-8b45-7484d910209b")
+		)
+		(instances
+			(project "GBDump"
+				(path "/97c582ec-aebc-49f1-a03f-b2d95e3214dc"
+					(reference "#PWR037")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3.3V")
 		(at 227.33 33.02 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -9518,7 +9559,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Connector_PinHeader_2.54mm:STM32F072B-DISCO"
 			(at 41.91 55.88 0)
 			(effects
 				(font
@@ -10031,7 +10072,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric"
 			(at 113.03 67.31 0)
 			(effects
 				(font
@@ -10228,7 +10269,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric"
 			(at 113.03 157.48 0)
 			(effects
 				(font
@@ -10360,7 +10401,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric"
 			(at 127 20.32 0)
 			(effects
 				(font
@@ -10469,6 +10510,71 @@
 		)
 	)
 	(symbol
+		(lib_id "power:+3.3V")
+		(at 171.45 54.61 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "a3116316-c240-4af4-bc27-f49be16352ad")
+		(property "Reference" "#PWR026"
+			(at 171.45 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "V_CART"
+			(at 171.45 51.054 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 171.45 54.61 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 171.45 54.61 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
+			(at 171.45 54.61 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "11c7eae1-3d90-4aaf-a5b5-d5466028e0f4")
+		)
+		(instances
+			(project "GBDump"
+				(path "/97c582ec-aebc-49f1-a03f-b2d95e3214dc"
+					(reference "#PWR026")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "power:Earth")
 		(at 67.31 139.7 0)
 		(unit 1)
@@ -10559,7 +10665,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical"
 			(at 237.49 35.56 0)
 			(effects
 				(font
@@ -10763,7 +10869,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Resistor_SMD:R_1206_3216Metric"
 			(at 96.266 80.264 90)
 			(effects
 				(font
@@ -10897,7 +11003,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Connector_Card:microSD_HC_Hirose_DM3AT-SF-PEJM5"
 			(at 299.72 63.5 0)
 			(effects
 				(font
@@ -11319,7 +11425,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric"
 			(at 127 67.31 0)
 			(effects
 				(font
