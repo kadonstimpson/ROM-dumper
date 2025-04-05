@@ -4048,16 +4048,6 @@
 	)
 	(wire
 		(pts
-			(xy 245.11 43.18) (xy 245.11 41.91)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "14317e1d-c83a-4030-972f-6b444c3efb6f")
-	)
-	(wire
-		(pts
 			(xy 130.81 78.74) (xy 175.26 78.74)
 		)
 		(stroke
@@ -5672,6 +5662,28 @@
 					(size 1.27 1.27)
 				)
 				(justify right)
+				(hide yes)
+			)
+		)
+	)
+	(global_label "CART_VCC"
+		(shape output)
+		(at 245.11 43.18 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "2106d542-2505-4721-851e-31cd21309951")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 257.2876 43.18 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
 				(hide yes)
 			)
 		)
@@ -9287,71 +9299,6 @@
 			(project "GBDump"
 				(path "/97c582ec-aebc-49f1-a03f-b2d95e3214dc"
 					(reference "#PWR030")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:+3.3V")
-		(at 245.11 41.91 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "78c15371-cac2-4bdc-b102-44ad48aafa4d")
-		(property "Reference" "#PWR026"
-			(at 245.11 45.72 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "V_CART"
-			(at 245.11 38.354 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 245.11 41.91 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 245.11 41.91 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
-			(at 245.11 41.91 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "1b638ea5-b535-4e27-a48f-872ee3b4dd0e")
-		)
-		(instances
-			(project "GBDump"
-				(path "/97c582ec-aebc-49f1-a03f-b2d95e3214dc"
-					(reference "#PWR026")
 					(unit 1)
 				)
 			)
