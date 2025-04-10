@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 UART_HandleTypeDef huart1;
+UART_HandleTypeDef huart2;
 
 #define DATA_PORT GPIOC
 #define ADDR_LOW_PORT GPIOC   // PC0-PC15
@@ -13,6 +14,7 @@ UART_HandleTypeDef huart1;
 void GPIO_Init_All(void);
 void GPIO_UART1_Init(void);
 void UART1_Init(void);
+void UART2_Init(void);  // Initialize UART2 for USB debug
 void set_address(uint16_t addr);
 uint8_t read_data_byte(void);
 void send_serial(const char* msg);
@@ -21,6 +23,7 @@ int lab1_main(void) {
     HAL_Init();
     GPIO_Init_All();
     UART1_Init();
+    UART2_Init();
     GPIO_UART1_Init();
 
     char msg[64];
@@ -107,6 +110,18 @@ void UART1_Init(void) {
     huart1.Init.Mode = UART_MODE_TX_RX;
 
     HAL_UART_Init(&huart1);
+}
+
+void UART2_Init(void) {
+    huart2.Instance = USART2;
+    huart2.Init.BaudRate = 115200;
+    huart2.Init.WordLength = UART_WORDLENGTH_8B;
+    huart2.Init.StopBits = UART_STOPBITS_1;
+    huart2.Init.Parity = UART_PARITY_NONE;
+    huart2.Init.Mode - UART_MODE_TX_RX;
+    huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+    huart2.Init.OverSampling = USART_OVERSAMPLING_16;
+    HAL_UART_Init(&huart2);
 }
 
 void send_serial(const char* msg) {
