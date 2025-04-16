@@ -7,6 +7,7 @@
 #define GBC_ADDR            GPIO_PIN_All                            // P0 - P15 (GPIOC) 
 #define GBC_DAT             (GPIO_PIN_All & ((uint16_t)0x00FF))    // P0 - P7  (GPIOB)
 
+void GBC_test(void);
 void shift_enable(void);
 void GBA_write_addr(uint32_t addr);
 void GBC_write_addr(uint32_t addr);

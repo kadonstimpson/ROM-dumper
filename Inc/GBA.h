@@ -1,0 +1,1 @@
+void GBA_test(void);
