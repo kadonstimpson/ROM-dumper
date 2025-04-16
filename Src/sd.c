@@ -1,6 +1,11 @@
 #include "sd.h"
 //use fatfs for filesystem, requires implementation of hardware accesses.
 
+// Put code to run here
+void sd_test(){
+
+}
+
 // sd card connect to spi2
 void init_spi_sd()
 {

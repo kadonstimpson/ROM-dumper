@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "GBC.h"
 #include "GBA.h"
-#include "SD.h"
+#include "sd.h"
 #include "main.h"
 #include "uart.h"
 
@@ -16,7 +16,7 @@ int main(void) {
 
   GBC_test();
 
-  SD_test();
+  sd_test();
 
   while(1){}
 }
