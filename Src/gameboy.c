@@ -2,10 +2,9 @@
 #include "stm32f0xx_hal.h"
 #include "gameboy.h"
 
+static uint8_t data_bus_mode = 0xFF;  // 0 = input, 1 = output, 0xFF = uninitialized
+
 void shift_enable(void) {
-
-    __HAL_RCC_GPIOA_CLK_ENABLE();  // Enable GPIOA clock
-
     GPIO_InitTypeDef GPIO_InitStruct = {0};
     GPIO_InitStruct.Pin = GPIO_PIN_2;
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;  // Push-pull output
@@ -19,7 +18,7 @@ void shift_enable(void) {
 
 void GBA_write_addr(uint32_t addr){
 
-    uint32_t rev = __RBIT(addr);    // Reverse address for physical mapping
+    uint32_t addr;    // Reverse address for physical mapping
 
     __HAL_RCC_GPIOB_CLK_ENABLE();   // Enable GPIOB clock
     __HAL_RCC_GPIOC_CLK_ENABLE();   // Enable GPIOC clock
@@ -71,34 +70,8 @@ uint32_t GBA_read(void){
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
     uint32_t data = GPIOC->IDR & 0xFFFF;     // Read input
-    data = __RBIT(data);                   // Reverse bus
-    data >>= 16;
 
     return(data);
-}
-
-void GBC_read_init(void){
-    __HAL_RCC_GPIOB_CLK_ENABLE();   // Enable GPIOB clock
-
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
-
-    GPIO_InitStruct.Pin = GBC_DAT;
-    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-}
-
-GBC_write_init(void){
-    __HAL_RCC_GPIOB_CLK_ENABLE();   // Enable GPIOB clock
-
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
-
-    GPIO_InitStruct.Pin = GBC_DAT;
-    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct); 
 }
 
 uint8_t GBC_read(void){
@@ -108,7 +81,7 @@ uint8_t GBC_read(void){
 
 void GBC_read_bank(uint32_t start_addr){    // In progress, dumps one bank to serial 
 
-    GBC_read_init();
+    GBC_set_data_input();
 
     char buf[16];
 
@@ -121,17 +94,39 @@ void GBC_read_bank(uint32_t start_addr){    // In progress, dumps one bank to se
         uint8_t byte = GBC_read();
         sprintf(buf, "%02X", byte);
         send_serial(buf);
-        if ((i & 0x0F) == 0x0F) send_serial("\r\n");  // newline every 16 bytes
+        // if ((i & 0x0F) == 0x0F) send_serial("\r\n");  // newline every 16 bytes
 
         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);    // Read disable
     }
 }
 
 void GBC_write_data(uint8_t byte){
-    GBC_write_init();                                       // Ensure clk enable, data bus output mode
+    GBC_set_data_output();                                       // Ensure clk enable, data bus output mode
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);    // Ensure read disabled
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9, GPIO_PIN_RESET);   // Write enable
     GPIOB->ODR = (GPIOB->ODR & ~0x00FF) | (byte & 0xFF);    // Write byte to PB0-PB7
     for (volatile int d = 0; d < 30; d++) __NOP();          // ~500 ns delay
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9, GPIO_PIN_SET);     // Write disable
+}
+
+void GBC_set_data_output(void) {
+    if (data_bus_mode != 1) {
+        GPIO_InitTypeDef GPIO_InitStruct = {0};
+        GPIO_InitStruct.Pin = GBC_DAT;
+        GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+        GPIO_InitStruct.Pull = GPIO_NOPULL;
+        HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+        data_bus_mode = 1;
+    }
+}
+
+void GBC_set_data_input(void) {
+    if (data_bus_mode != 0) {
+        GPIO_InitTypeDef GPIO_InitStruct = {0};
+        GPIO_InitStruct.Pin = GBC_DAT;
+        GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+        GPIO_InitStruct.Pull = GPIO_NOPULL;
+        HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+        data_bus_mode = 0;
+    }
 }

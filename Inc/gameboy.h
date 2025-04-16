@@ -10,9 +10,7 @@
 void shift_enable(void);
 void GBA_write_addr(uint32_t addr);
 void GBC_write_addr(uint32_t addr);
-void GBC_read_init(void);
 uint32_t GBA_read(void);
 uint8_t GBC_read(void);
 void GBC_read_bank(uint32_t start_addr);
-void GBC_write_init(void);
 void GB_write_data(uint8_t byte);
