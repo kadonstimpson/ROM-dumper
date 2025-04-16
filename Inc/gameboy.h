@@ -14,3 +14,5 @@ uint32_t GBA_read(void);
 uint8_t GBC_read(void);
 void GBC_read_bank(uint32_t start_addr);
 void GB_write_data(uint8_t byte);
+void GBC_set_data_output(void);
+void GBC_set_data_input(void);

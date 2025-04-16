@@ -1,5 +1,6 @@
 #include "stm32f0xx.h"
 #include "stm32f0xx_hal.h"
+#include <string.h>
 
 UART_HandleTypeDef huart1;
 

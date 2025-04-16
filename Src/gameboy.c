@@ -1,6 +1,8 @@
 #include "stm32f0xx.h"
 #include "stm32f0xx_hal.h"
 #include "gameboy.h"
+#include "uart.h"
+#include <stdio.h>
 
 static uint8_t data_bus_mode = 0xFF;  // 0 = input, 1 = output, 0xFF = uninitialized
 
@@ -17,8 +19,6 @@ void shift_enable(void) {
 }
 
 void GBA_write_addr(uint32_t addr){
-
-    uint32_t addr;    // Reverse address for physical mapping
 
     __HAL_RCC_GPIOB_CLK_ENABLE();   // Enable GPIOB clock
     __HAL_RCC_GPIOC_CLK_ENABLE();   // Enable GPIOC clock
@@ -38,14 +38,12 @@ void GBA_write_addr(uint32_t addr){
     HAL_GPIO_Init(GPIOC, &ADDR_H);
     HAL_GPIO_Init(GPIOB, &ADDR_L);
 
-    GPIOC->ODR = (rev >> 8) & 0xFFFF;
-    GPIOB->ODR = (rev >> 24) & 0x00FF;
+    GPIOC->ODR = (addr >> 8) & 0xFFFF;
+    GPIOB->ODR = (addr >> 24) & 0x00FF;
 
 }
 
 void GBC_write_addr(uint32_t addr){
-
-    uint32_t rev = __RBIT(addr);    // Reverse address for physical mapping
 
     __HAL_RCC_GPIOC_CLK_ENABLE();   // Enable GPIOC clock
 

@@ -1,8 +1,7 @@
 #include "stm32f0xx_hal.h"
 #include <string.h>
 #include <stdio.h>
-
-UART_HandleTypeDef huart1;
+#include "gameboy.h"
 
 #define DATA_PORT GPIOC
 #define ADDR_LOW_PORT GPIOC   // PC0-PC15
@@ -19,36 +18,65 @@ void send_serial(const char* msg);
 
 int lab1_main(void) {
     HAL_Init();
-    GPIO_Init_All();
-    UART1_Init();
-    GPIO_UART1_Init();
+    // SystemClock_Config();
 
-    char msg[64];
+    __HAL_RCC_GPIOA_CLK_ENABLE();  // Enable GPIOA clock
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    __HAL_RCC_GPIOC_CLK_ENABLE();
 
-    for (uint16_t addr = 0x100; addr <= 0x14F; addr++) {
-        set_address(addr);
+    GPIO_UART1_Init();  
+    UART1_Init();  
+    
+    GPIO_InitTypeDef RDWR = {0};  // Upper address bus
+    RDWR.Pin = GPIO_PIN_0 | GPIO_PIN_9 | GPIO_PIN_10;
+    RDWR.Mode = GPIO_MODE_OUTPUT_PP;  // Push-pull output
+    RDWR.Pull = GPIO_NOPULL;
+    RDWR.Speed = GPIO_SPEED_FREQ_LOW;
 
-        HAL_GPIO_WritePin(CART_RD_PORT, CART_RD_PIN, GPIO_PIN_RESET);
-        HAL_Delay(1);
+    HAL_GPIO_Init(GPIOB, &RDWR);
 
-        GPIO_InitTypeDef GPIO_InitStruct = {0};
-        GPIO_InitStruct.Pin = 0x00FF; // PC0-PC7
-        GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-        HAL_GPIO_Init(DATA_PORT, &GPIO_InitStruct);
+    shift_enable();
 
-        uint8_t data = read_data_byte();
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);    // Read disable
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9, GPIO_PIN_SET);     // Write disable
 
-        HAL_GPIO_WritePin(CART_RD_PORT, CART_RD_PIN, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);    // Reset cart
+    HAL_Delay(10);
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
+    HAL_Delay(10);
 
-        sprintf(msg, "Addr 0x%04X: 0x%02X\r\n", addr, data);
-        send_serial(msg);
-        HAL_Delay(10);
-    }
+    // test_bank_switch();
 
-    while (1) {
-        HAL_Delay(100);
-        printf("\nUSART Test...");
-    }
+    char buf[16];
+
+    GBC_read_bank(0x0000);
+
+    while(1){}
+
+    // for (uint16_t addr = 0x100; addr <= 0x14F; addr++) {
+    //     set_address(addr);
+
+    //     HAL_GPIO_WritePin(CART_RD_PORT, CART_RD_PIN, GPIO_PIN_RESET);
+    //     HAL_Delay(1);
+
+    //     GPIO_InitTypeDef GPIO_InitStruct = {0};
+    //     GPIO_InitStruct.Pin = 0x00FF; // PC0-PC7
+    //     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    //     HAL_GPIO_Init(DATA_PORT, &GPIO_InitStruct);
+
+    //     uint8_t data = read_data_byte();
+
+    //     HAL_GPIO_WritePin(CART_RD_PORT, CART_RD_PIN, GPIO_PIN_SET);
+
+    //     sprintf(msg, "Addr 0x%04X: 0x%02X\r\n", addr, data);
+    //     send_serial(msg);
+    //     HAL_Delay(10);
+    // }
+
+    // while (1) {
+        // HAL_Delay(100);
+        // printf("\nUSART Test...");
+    // }
 }
 
 void GPIO_Init_All(void) {
