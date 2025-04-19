@@ -8,7 +8,8 @@ static uint8_t data_bus_mode = 0xFF;  // 0 = input, 1 = output, 0xFF = uninitial
 
 void GBC_test(void){
     // GBC_read_bank(0x0000);
-    test_bank_switch();
+    // test_bank_switch();
+    GBC_dump_cart();
 }
 
 void shift_enable(void) {
@@ -36,12 +37,20 @@ void GBC_write_addr(uint32_t addr){
     GPIOC->ODR = addr & 0xFFFF;
 }
 
-uint8_t GBC_read(void){
-
-    return GPIOB->IDR & 0xFF;     // Read input
+uint8_t GBC_read(uint32_t addr){
+    GBC_set_data_input();
+    GBC_write_addr(addr);
+    for (volatile int d = 0; d < 5; d++) __NOP();  // ~500 ns delay
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET);    // Read enable
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_RESET);    // Pull /CS low
+    for (volatile int d = 0; d < 5; d++) __NOP();  // ~500 ns delay
+    uint8_t byte = GPIOB->IDR & 0xFF;     // Read input
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);    // Read disable
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_SET);    // Pull /CS high
+    return byte;
 }
 
-void GBC_read_bank(uint32_t start_addr){    // In progress, dumps one bank to serial 
+void GBC_read_bank(uint32_t start_addr){    // Not currently used
 
     GBC_set_data_input();
 
@@ -50,15 +59,15 @@ void GBC_read_bank(uint32_t start_addr){    // In progress, dumps one bank to se
     for(int i = start_addr; i < start_addr + 0x4000; i++)
     {
         GBC_write_addr(i);
-        for (volatile int d = 0; d < 30; d++) __NOP();  // ~500 ns delay
+        for (volatile int d = 0; d < 5; d++) __NOP();  // ~500 ns delay
         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET);    // Read enable
         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_RESET);    // Pull /CS low
-        for (volatile int d = 0; d < 30; d++) __NOP();  // ~500 ns delay
+        for (volatile int d = 0; d < 5; d++) __NOP();  // ~500 ns delay
         // HAL_Delay(1);
 
-        uint8_t byte = GBC_read();
-        sprintf(buf, "%02X", byte);
-        send_serial(buf);
+        // uint8_t byte = GBC_read();
+        // sprintf(buf, "%02X", byte);
+        // send_serial(buf);
         // if ((i & 0x0F) == 0x0F) send_serial("\r\n");  // newline every 16 bytes
 
         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);    // Read disable
@@ -98,47 +107,98 @@ void GBC_set_data_input(void) {
     }
 }
 
-void test_bank_switch(void){
-    char buf[32];
-
-    for (uint8_t bank = 0; bank < 4; bank++) {
-        // Switch bank with proper timing
-        GBC_write_addr(0x3000);       // Bit 8
-        GBC_write_data((bank >> 8) & 0x01);
-        HAL_Delay(1);
-        GBC_write_addr(0x2000);
-        GBC_write_data(bank);
-        GBC_set_data_input();          //  <‑‑ release PB0‑PB7
-        HAL_Delay(5);  // Extended delay after bank switch (5ms)
-        
-        // Read first 16 bytes of this bank
-        send_serial("\r\nBank ");
-        sprintf(buf, "%d: ", bank);
-        send_serial(buf);
-        
-        for (int addr = 0x4000; addr < 0x4010; addr++) {
-            GBC_write_addr(addr);
-            HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET);
-            for (volatile int d = 0; d < 100; d++) __NOP();  // Longer read delay
-            uint8_t byte = GBC_read();
-            HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);
-            
-            sprintf(buf, "%02X ", byte);
-            send_serial(buf);
-        }
-
-        // GBC_read_bank(0x4000);
-    }
-
-    printf("Hello from F072 @ %lu Hz\r\n",
-        HAL_RCC_GetHCLKFreq());
- 
-    for (int i = 0; i < 256; ++i) {
-        printf("%02X ", i);
-        if ((i & 0x0F) == 0x0F) printf("\r\n");
-    }
+void bank_switch(uint16_t bank){
+    // Switch bank with proper timing
+    GBC_write_addr(0x3000);       // Bit 8
+    GBC_write_data((bank >> 8) & 0x01);
+    HAL_Delay(1);
+    GBC_write_addr(0x2000);
+    GBC_write_data(bank);
+    GBC_set_data_input();          //  <‑‑ release PB0‑PB7
+    HAL_Delay(5);  // Extended delay after bank switch (5ms)
 }
 
 void GBC_dump_cart(void){
 
+    // printf("\r\nCatridge Title: ");
+    for(int addr = 0x134; addr < 0x144; addr++){
+        int byte = GBC_read(addr);
+        // printf("%c", byte);
+    }
+
+    // printf("\r\nMemory Banking Scheme: ");
+    uint32_t addr = 0x0147;
+    uint8_t byte = GBC_read(addr);
+    switch(byte){   // Determine MBC type, dump accordingly
+        case 0x00:
+        case 0x08:
+        case 0x09:
+            // printf("\n\rMBC0");
+            break;
+
+        case 0x01:
+        case 0x02:
+        case 0x03:
+            // printf("\n\rMBC1");
+            break;
+
+        case 0x05:
+        case 0x06:
+            // printf("\n\rMBC2");
+            break;
+
+        case 0x0B:
+        case 0x0C:
+        case 0x0D:
+            // printf("\n\rMMM01 Not yet supported");
+            break;
+
+        case 0x0F:
+        case 0x10:
+        case 0x11:
+        case 0x12:
+        case 0x13:
+            // printf("\n\rMBC3");
+            break;
+
+        case 0x19:
+        case 0x1A:
+        case 0x1B:
+        case 0x1C:
+        case 0x1D:
+        case 0x1E:
+            // printf("\n\rMBC5");
+            dump_MBC5();
+            break;
+
+        case 0x20:
+            // printf("\n\rMBC6");
+            break;
+
+        case 0x22:
+            // printf("\n\rMBC7");
+            break;
+        
+        default:
+            // printf("\n\rERROR Unsupported MBC");
+            break;
+    }
+}
+
+void dump_MBC5(void){
+    uint32_t addr = 0x148;
+    uint8_t byte = GBC_read(0x0148);
+    uint32_t banks = 2 << byte;
+    // printf("\r\nROM Size: %d Kilobytes", banks * 16);
+
+    // printf("\r\n----BEGIN ROM----\r\n");    // Prepare to print rom
+
+    for(uint16_t i = 0; i < banks; i++){
+        bank_switch(i);
+        for(int addr = 0x4000; addr < 0x8000; addr++){
+            byte = GBC_read(addr);
+            HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
+            // printf("%02X", byte); 
+        }
+    }
 }
