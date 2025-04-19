@@ -42,11 +42,9 @@ uint8_t GBC_read(uint32_t addr){
     GBC_write_addr(addr);
     for (volatile int d = 0; d < 5; d++) __NOP();  // ~500 ns delay
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET);    // Read enable
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_RESET);    // Pull /CS low
     for (volatile int d = 0; d < 5; d++) __NOP();  // ~500 ns delay
     uint8_t byte = GPIOB->IDR & 0xFF;     // Read input
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);    // Read disable
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_SET);    // Pull /CS high
     return byte;
 }
 
@@ -115,7 +113,7 @@ void bank_switch(uint16_t bank){
     GBC_write_addr(0x2000);
     GBC_write_data(bank);
     GBC_set_data_input();          //  <‑‑ release PB0‑PB7
-    HAL_Delay(5);  // Extended delay after bank switch (5ms)
+    HAL_Delay(1);  // Extended delay after bank switch (1ms)
 }
 
 void GBC_dump_cart(void){
