@@ -17,3 +17,4 @@ void GBC_read_bank(uint32_t start_addr);
 void GB_write_data(uint8_t byte);
 void GBC_set_data_output(void);
 void GBC_set_data_input(void);
+void test_bank_switch(void);

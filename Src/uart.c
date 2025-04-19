@@ -1,6 +1,7 @@
 #include "stm32f0xx.h"
 #include "stm32f0xx_hal.h"
 #include <string.h>
+#include <unistd.h>
 
 UART_HandleTypeDef huart1;
 
@@ -38,7 +39,11 @@ void send_serial(const char* msg) {
 
 // Allow printf over USART
 
-int __io_putchar(int ch) {
-    HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
-    return ch;
+int _write(int file, char *ptr, int len)
+{
+    if (file == STDOUT_FILENO || file == STDERR_FILENO) {
+        HAL_UART_Transmit(&huart1, (uint8_t *)ptr, len, HAL_MAX_DELAY);
+        return len;
+    }
+    return -1;
 }

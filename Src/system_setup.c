@@ -91,4 +91,4 @@ void assert_failed(uint8_t* file, uint32_t line)
 void _close(void) { Error_Handler(); }
 void _lseek(void) { Error_Handler(); }
 void _read(void) { Error_Handler(); }
-void _write(void) { Error_Handler(); }
+void __weak _write(void) { Error_Handler(); }
