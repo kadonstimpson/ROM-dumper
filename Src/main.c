@@ -8,6 +8,7 @@
 #include "uart.h"
 
 void Init_All(void);
+static void Gyro_SPI2_Init();
 
 int main(void) {
   Init_All();   // Add any additional initialization here
@@ -29,24 +30,101 @@ void Init_All(){
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
 
+  __HAL_RCC_PWR_CLK_ENABLE();   // Enable access to backup domain
+  HAL_PWR_EnableBkUpAccess();
+
+  RCC->BDCR &= ~RCC_BDCR_LSEON; // Disable LSE oscillator
+
+  while (RCC->BDCR & RCC_BDCR_LSERDY) {}  // Wait until LSE is fully disabled
+
+  Gyro_SPI2_Init();
   GPIO_UART1_Init();  
   UART1_Init();  
 
   GPIO_InitTypeDef RDWR = {0};  // Upper address bus
-  RDWR.Pin = GPIO_PIN_0 | GPIO_PIN_9 | GPIO_PIN_10;
+  RDWR.Pin = GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_11;
   RDWR.Mode = GPIO_MODE_OUTPUT_PP;  // Push-pull output
   RDWR.Pull = GPIO_NOPULL;
   RDWR.Speed = GPIO_SPEED_FREQ_LOW;
 
+  GPIO_InitTypeDef RST = {0};  // Cart Reset
+  RST.Pin = GPIO_PIN_0;
+  RST.Mode = GPIO_MODE_OUTPUT_PP;  // Push-pull output
+  RST.Pull = GPIO_NOPULL;
+  RST.Speed = GPIO_SPEED_FREQ_LOW;
+  
   HAL_GPIO_Init(GPIOB, &RDWR);
+  HAL_GPIO_Init(GPIOA, &RST);
 
   shift_enable();
 
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);    // Read disable
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9, GPIO_PIN_SET);     // Write disable
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);      // Read disable
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9, GPIO_PIN_SET);       // Write disable
 
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);    // Reset cart
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_RESET);     // Reset cart
   HAL_Delay(10);
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET);
   HAL_Delay(10);
 }
+
+/* quick‑and‑dirty SPI2 init – put this near Init_All() */
+static void Gyro_SPI2_Init(void)
+{
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    __HAL_RCC_SPI2_CLK_ENABLE();
+
+    GPIO_InitTypeDef g = {0};
+
+    /* PB13‑15  →  SCK / MISO / MOSI  (AF0) */
+    g.Pin       = GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15;
+    g.Mode      = GPIO_MODE_AF_PP;
+    g.Pull      = GPIO_NOPULL;
+    g.Speed     = GPIO_SPEED_FREQ_HIGH;
+    g.Alternate = GPIO_AF0_SPI2;
+    HAL_GPIO_Init(GPIOB, &g);
+
+    /* PC0  →  CS (GPIO, idle HIGH) */
+    __HAL_RCC_GPIOC_CLK_ENABLE();
+    g.Pin   = GPIO_PIN_0;
+    g.Mode  = GPIO_MODE_OUTPUT_PP;
+    g.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(GPIOC, &g);
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, GPIO_PIN_SET);  // CS high
+
+    static SPI_HandleTypeDef h;
+    h.Instance               = SPI2;
+    h.Init.Mode              = SPI_MODE_MASTER;
+    h.Init.Direction         = SPI_DIRECTION_2LINES;
+    h.Init.DataSize          = SPI_DATASIZE_8BIT;
+    h.Init.CLKPolarity       = SPI_POLARITY_LOW;
+    h.Init.CLKPhase          = SPI_PHASE_1EDGE;
+    h.Init.NSS               = SPI_NSS_SOFT;
+    h.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256; // slow is fine
+    h.Init.FirstBit          = SPI_FIRSTBIT_MSB;
+    HAL_SPI_Init(&h);
+
+    /* ---------- talk to the gyro ---------- */
+
+    uint8_t wr[2];
+
+    /* 1. Power‑down the device (CTRL_REG1, addr 0x20) */
+    wr[0] = 0x20;               // address, MSB=0 → write
+    wr[1] = 0x00;               // PD=0, ODR=00 => power‑down
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, GPIO_PIN_RESET);
+    HAL_SPI_Transmit(&h, wr, 2, HAL_MAX_DELAY);
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, GPIO_PIN_SET);
+
+    /* 2. Disable every interrupt on both pins (CTRL_REG3, addr 0x22) */
+    wr[0] = 0x22;
+    wr[1] = 0x10;               // all I2_/I1_ bits clear
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, GPIO_PIN_RESET);
+    HAL_SPI_Transmit(&h, wr, 2, HAL_MAX_DELAY);
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, GPIO_PIN_SET);
+
+    /* Now PC1 / PC2 are high‑Z.  Reconfigure them for your address bus. */
+    g.Pin   = GPIO_PIN_1 | GPIO_PIN_2;
+    g.Mode  = GPIO_MODE_OUTPUT_PP;
+    g.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(GPIOC, &g);
+}
+

@@ -7,7 +7,27 @@
 static uint8_t data_bus_mode = 0xFF;  // 0 = input, 1 = output, 0xFF = uninitialized
 
 void GBC_test(void){
+    GBC_read_bank(0x0000);
+    // uint16_t i = 0x0001;
+    // GBC_set_data_input();
+    // char buf[16];
 
+    // while(1){
+    //     GBC_write_addr(i);
+    //     for (volatile int d = 0; d < 30; d++) __NOP();  // ~500 ns delay
+    //     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET);    // Read enable
+    //     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_RESET);    // Pull /CS low
+    //     for (volatile int d = 0; d < 30; d++) __NOP();  // ~500 ns delay
+    //     // HAL_Delay(1);
+
+    //     uint8_t byte = GBC_read();
+    //     sprintf(buf, "%02X", byte);
+    //     send_serial(buf);
+    //     // if ((i & 0x0F) == 0x0F) send_serial("\r\n");  // newline every 16 bytes
+
+    //     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);    // Read disable
+    //     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_SET);    // Pull /CS high
+    // }
 }
 
 void shift_enable(void) {
@@ -23,8 +43,6 @@ void shift_enable(void) {
 }
 
 void GBC_write_addr(uint32_t addr){
-
-    __HAL_RCC_GPIOC_CLK_ENABLE();   // Enable GPIOC clock
 
     GPIO_InitTypeDef ADDR_H = {0};  // Upper address bus
     ADDR_H.Pin = GBC_ADDR;
@@ -51,7 +69,9 @@ void GBC_read_bank(uint32_t start_addr){    // In progress, dumps one bank to se
     for(int i = start_addr; i < start_addr + 0x4000; i++)
     {
         GBC_write_addr(i);
+        for (volatile int d = 0; d < 30; d++) __NOP();  // ~500 ns delay
         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET);    // Read enable
+        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_RESET);    // Pull /CS low
         for (volatile int d = 0; d < 30; d++) __NOP();  // ~500 ns delay
         // HAL_Delay(1);
 
@@ -61,6 +81,7 @@ void GBC_read_bank(uint32_t start_addr){    // In progress, dumps one bank to se
         // if ((i & 0x0F) == 0x0F) send_serial("\r\n");  // newline every 16 bytes
 
         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);    // Read disable
+        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_SET);    // Pull /CS high
     }
 }
 
