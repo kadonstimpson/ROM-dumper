@@ -9,8 +9,14 @@
 static uint8_t GBA_bus_mode = 0xFF;  // 0 = data input, 1 =  data output, 2 = address output 0xFF = uninitialized
 
 void GBA_test(void){
-    for(uint32_t addr = 0x000000; addr < 0x004000; addr++){
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_RESET);   // enable /CS
+    __NOP(); __NOP();
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_SET);   // enable /CS
+    __NOP(); __NOP();
+
+    for(uint32_t addr = 0x000000; addr < 0x800000; addr++){
         uint16_t word = GBA_read_addr(addr);
+        word = (word << 8) | ((word >> 8) & 0xFF); // Bytes swap
         printf("%04X", word);
     }
 
