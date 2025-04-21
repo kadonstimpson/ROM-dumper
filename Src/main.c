@@ -6,6 +6,7 @@
 #include "sd.h"
 #include "main.h"
 #include "uart.h"
+#include "usb_device.h"
 
 void Init_All(void);
 static void Gyro_SPI2_Init();
@@ -29,6 +30,9 @@ void Init_All(){
   __HAL_RCC_GPIOA_CLK_ENABLE();  // Enable GPIOA clock
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
+
+  __HAL_RCC_PWR_CLK_ENABLE();   // Enable USB clock and power
+  MX_USB_DEVICE_Init();
 
   __HAL_RCC_PWR_CLK_ENABLE();   // Enable access to backup domain
   HAL_PWR_EnableBkUpAccess();
