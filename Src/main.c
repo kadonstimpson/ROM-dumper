@@ -10,6 +10,7 @@
 
 void Init_All(void);
 static void Gyro_SPI2_Init();
+static void USB_ClockEnable();
 
 int main(void) {
   Init_All();   // Add any additional initialization here
@@ -26,16 +27,16 @@ int main(void) {
 void Init_All(){
   HAL_Init();
   SystemClock_Config();
+  USB_ClockEnable();
 
   __HAL_RCC_GPIOA_CLK_ENABLE();  // Enable GPIOA clock
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
 
   __HAL_RCC_PWR_CLK_ENABLE();   // Enable USB clock and power
-  MX_USB_DEVICE_Init();
-
-  __HAL_RCC_PWR_CLK_ENABLE();   // Enable access to backup domain
-  HAL_PWR_EnableBkUpAccess();
+  // MX_USB_DEVICE_Init();      // Hangs, removed temporarily
+ 
+  HAL_PWR_EnableBkUpAccess(); // Enable access to backup domain
 
   RCC->BDCR &= ~RCC_BDCR_LSEON; // Disable LSE oscillator to free PC14 and PC15
 
@@ -121,5 +122,14 @@ static void Gyro_SPI2_Init(void)  // set gyro pins to high impedence
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, GPIO_PIN_RESET);
     HAL_SPI_Transmit(&h, wr, 2, HAL_MAX_DELAY);
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, GPIO_PIN_SET);
+}
+
+static void USB_ClockEnable(void){
+  __HAL_RCC_HSI48_ENABLE();
+  while(!__HAL_RCC_GET_FLAG(RCC_FLAG_HSI48RDY));
+
+  __HAL_RCC_USB_CONFIG(RCC_USBCLKSOURCE_HSI48);
+  __HAL_RCC_CRS_CLK_ENABLE();
+  __HAL_RCC_USB_CLK_ENABLE();
 }
 

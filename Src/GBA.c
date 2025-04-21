@@ -30,7 +30,7 @@ void GBA_test(void){
         raw[k++] = w & 0xFF;    // Write high byte
 
         if (k == CHUNK_BYTES) {
-            CDC_Transmit_FS(&raw, CHUNK_BYTES);
+            // CDC_Transmit_FS(&raw, CHUNK_BYTES);
             HAL_UART_Transmit(&huart1, raw, CHUNK_BYTES, HAL_MAX_DELAY);
             k = 0;
         }
@@ -39,7 +39,7 @@ void GBA_test(void){
     // last partial chunk
     if (k)
         HAL_UART_Transmit(&huart1, raw, k, HAL_MAX_DELAY);
-        CDC_Transmit_FS(&raw, k);
+        // CDC_Transmit_FS(&raw, k);
 
 }
 
