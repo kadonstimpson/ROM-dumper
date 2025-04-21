@@ -206,8 +206,8 @@ void dump_MBC0(void){
 }
 
 // MBC1 2MiB Max
-void dump_MBC1(void)
-{
+void dump_MBC1(void){
+
     uint8_t byte = GBC_read(0x0148);    // Read rom size
     uint32_t banks = 2 << byte;         // Convert "size" to banks
 
@@ -229,7 +229,27 @@ void dump_MBC1(void)
 }
 
 // MBC2 up to 256Kib
-// void dump_MBC2(void); // Handled as MBC1
+void dump_MBC2(void){ // Handled as MBC1
+
+    uint8_t byte = GBC_read(0x0148);    // Read rom size
+    uint32_t banks = 2 << byte;         // Convert "size" to banks
+
+    for(uint16_t addr = 0x0000; addr < 0x8000; addr++){ // Dump first two banks
+        byte = GBC_read(addr);
+        HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
+    }
+
+    if(banks > 2){
+        for(int bank = 2; bank < banks; bank++){    // Dump subsequent banks
+            bank_switch(bank, 2);
+            for(int addr = 0x4000; addr < 0x8000; addr++){  // Read new bank
+                byte = GBC_read(addr);
+                HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
+                // printf("%02X", byte); 
+            }
+        }
+    }
+}
 
 // MBC5 up to 8MiB
 void dump_MBC5(void){
