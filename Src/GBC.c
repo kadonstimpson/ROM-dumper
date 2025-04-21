@@ -114,12 +114,13 @@ void GBC_dump_cart(void){
         case 0x02:
         case 0x03:
             // printf("\n\rMBC1");
-            dump_MBCO();    // Handled as MBC1 for now
+            dump_MBC1();
             break;
 
         case 0x05:
         case 0x06:
             // printf("\n\rMBC2");
+            dump_MBC1();    // Handled as MBC1 for now
             break;
 
         case 0x0B:
