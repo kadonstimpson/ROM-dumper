@@ -251,6 +251,28 @@ void dump_MBC2(void){ // Handled as MBC1
     }
 }
 
+// MBC3 up to 2MiB - Essentially the same as MBC1 and MBC2 other than switching and RAM
+void dump_MBC3(void){
+    uint8_t byte = GBC_read(0x0148);
+    uint32_t banks = 2 << byte;
+
+    for(uint16_t addr = 0x0000; addr < 0x8000; addr++){ // Dump first two banks
+        byte = GBC_read(addr);
+        HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
+    }
+
+    if(banks > 2){
+        for(int bank = 2; bank < banks; bank++){    // Dump subsequent banks
+            bank_switch(bank, 3);
+            for(int addr = 0x4000; addr < 0x8000; addr++){  // Read new bank
+                byte = GBC_read(addr);
+                HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
+                // printf("%02X", byte); 
+            }
+        }
+    }
+}
+
 // MBC5 up to 8MiB
 void dump_MBC5(void){
     uint8_t byte = GBC_read(0x0148);    // Read rom size
