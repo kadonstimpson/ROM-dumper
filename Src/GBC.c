@@ -80,7 +80,7 @@ void GBC_set_data_input(void) {
     }
 }
 
-void bank_switch(uint16_t bank){
+void bank_switch(uint16_t bank){    // This was written for MBC5 SHOULD still work for other types.
     // Switch bank with proper timing
     GBC_write_addr(0x3000);       // Bit 8
     GBC_write_data((bank >> 8) & 0x01);
@@ -114,6 +114,7 @@ void GBC_dump_cart(void){
         case 0x02:
         case 0x03:
             // printf("\n\rMBC1");
+            dump_MBCO();    // Handled as MBC1 for now
             break;
 
         case 0x05:
@@ -169,7 +170,7 @@ void dump_MBC0(void){
 }
 
 // MBC1 2MiB Max
-void dump_MC1(void)
+void dump_MBC1(void)
 {
     uint8_t byte = GBC_read(0x0148);    // Read rom size
     uint32_t banks = 2 << byte;         // Convert "size" to banks
@@ -190,6 +191,9 @@ void dump_MC1(void)
         }
     }
 }
+
+// MBC2 up to 256Kib
+// void dump_MBC2(void); // Handled as MBC1
 
 // MBC5 up to 8MiB
 void dump_MBC5(void){

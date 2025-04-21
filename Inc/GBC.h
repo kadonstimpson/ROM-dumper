@@ -16,4 +16,6 @@ void GBC_set_data_input(void);
 void bank_switch(uint16_t bank);
 void GBC_dump_cart(void);
 void dump_MBC0(void);
+void dump_MBC1(void);
+// void dump_MBC2(void);   // Dumping ROM same as MBC1
 void dump_MBC5(void);
