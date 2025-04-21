@@ -48,31 +48,6 @@ uint8_t GBC_read(uint32_t addr){
     return byte;
 }
 
-void GBC_read_bank(uint32_t start_addr){    // Not currently used
-
-    GBC_set_data_input();
-
-    char buf[16];
-
-    for(int i = start_addr; i < start_addr + 0x4000; i++)
-    {
-        GBC_write_addr(i);
-        for (volatile int d = 0; d < 5; d++) __NOP();  // ~500 ns delay
-        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET);    // Read enable
-        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_RESET);    // Pull /CS low
-        for (volatile int d = 0; d < 5; d++) __NOP();  // ~500 ns delay
-        // HAL_Delay(1);
-
-        // uint8_t byte = GBC_read();
-        // sprintf(buf, "%02X", byte);
-        // send_serial(buf);
-        // if ((i & 0x0F) == 0x0F) send_serial("\r\n");  // newline every 16 bytes
-
-        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);    // Read disable
-        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_SET);    // Pull /CS high
-    }
-}
-
 void GBC_write_data(uint8_t byte){
     GBC_set_data_output();                                  // Ensure clk enable, data bus output mode
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);    // Ensure read disabled
@@ -117,12 +92,12 @@ void bank_switch(uint16_t bank){
 }
 
 void GBC_dump_cart(void){
-
+    // === DEBUG OUTPUT ===
     // printf("\r\nCatridge Title: ");
-    for(int addr = 0x134; addr < 0x144; addr++){
-        int byte = GBC_read(addr);
-        // printf("%c", byte);
-    }
+    // for(int addr = 0x134; addr < 0x144; addr++){
+    //     int byte = GBC_read(addr);
+    //     printf("%c", byte);
+    // }
 
     // printf("\r\nMemory Banking Scheme: ");
     uint32_t addr = 0x0147;
@@ -132,6 +107,7 @@ void GBC_dump_cart(void){
         case 0x08:
         case 0x09:
             // printf("\n\rMBC0");
+            dump_MBC0();
             break;
 
         case 0x01:
@@ -183,10 +159,42 @@ void GBC_dump_cart(void){
     }
 }
 
+// MBC0 (No MBC) 32KiB Only
+void dump_MBC0(void){ 
+    uint8_t byte = 0x00;
+    for(uint16_t addr = 0x0000; addr < 0x8000; addr++){
+        byte = GBC_read(addr);
+        HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
+    }
+}
+
+// MBC1 2MiB Max
+void dump_MC1(void)
+{
+    uint8_t byte = GBC_read(0x0148);    // Read rom size
+    uint32_t banks = 2 << byte;         // Convert "size" to banks
+
+    for(uint16_t addr = 0x0000; addr < 0x8000; addr++){ // Dump first two banks
+        byte = GBC_read(addr);
+        HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
+    }
+
+    if(banks > 2){
+        for(int bank = 2; bank < banks; bank++){    // Dump subsequent banks
+            bank_switch(bank);
+            for(int addr = 0x4000; addr < 0x8000; addr++){  // Read new bank
+                byte = GBC_read(addr);
+                HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
+                // printf("%02X", byte); 
+            }
+        }
+    }
+}
+
+// MBC5 up to 8MiB
 void dump_MBC5(void){
-    uint32_t addr = 0x148;
-    uint8_t byte = GBC_read(0x0148);
-    uint32_t banks = 2 << byte;
+    uint8_t byte = GBC_read(0x0148);    // Read rom size
+    uint32_t banks = 2 << byte;         // Convert "size" to banks
     // printf("\r\nROM Size: %d Kilobytes", banks * 16);
 
     // printf("\r\n----BEGIN ROM----\r\n");    // Prepare to print rom
