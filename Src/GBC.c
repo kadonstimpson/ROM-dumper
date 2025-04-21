@@ -80,15 +80,50 @@ void GBC_set_data_input(void) {
     }
 }
 
-void bank_switch(uint16_t bank){    // This was written for MBC5 SHOULD still work for other types.
+void bank_switch(uint16_t bank, uint8_t mode){    // This was written for MBC5 SHOULD still work for other types.
     // Switch bank with proper timing
-    GBC_write_addr(0x3000);       // Bit 8
-    GBC_write_data((bank >> 8) & 0x01);
-    HAL_Delay(1);
-    GBC_write_addr(0x2000);
-    GBC_write_data(bank);
-    GBC_set_data_input();          //  <‑‑ release PB0‑PB7
-    HAL_Delay(1);  // Extended delay after bank switch (1ms)
+    switch(mode){
+        case 1: // MBC1 Switching
+            GBC_write_addr(0x2000);
+            GBC_write_data(bank & 0x1F);        // Write lower 5 bits
+            GBC_write_addr(0x2000);
+            GBC_write_addr((bank >> 5) & 0x3);  // Write upper 2 bits
+            break;
+
+        case 2: // MBC2 Switching
+            GBC_write_addr(0x0100);     // Bit 8 set for ROM banking
+            GBC_write_data(bank & 0xF);  // Write lower 4 bits
+            break;
+
+        case 3:
+            GBC_write_addr(0x2000);
+            GBC_write_data(bank & 0x7F);        // Write all 7 bits
+            break;
+
+        case 5: // MBC5 Switching
+            GBC_write_addr(0x3000);       // Bit 8
+            GBC_write_data((bank >> 8) & 0x01);
+            HAL_Delay(1);
+            GBC_write_addr(0x2000);
+            GBC_write_data(bank);
+            GBC_set_data_input();          //  <‑‑ release PB0‑PB7
+            HAL_Delay(1);  // Extended delay after bank switch (1ms)
+            break;
+        
+        case 6: // MBC6 Switching
+            GBC_write_addr(0x2800); // Set ROM mode
+            GBC_write_data(0x00);   
+            GBC_write_addr(0x2000); // Select bank (8KiB)
+            GBC_write_data(bank);
+            break;
+
+        case 7:
+            GBC_write_addr(0x2000); // Select bank
+            GBC_write_data(bank);
+
+        defualt:    // Weird MBC types (MMM01, M161, HuC1, HuC-3, etc.) tbd
+            break;  
+    }
 }
 
 void GBC_dump_cart(void){
@@ -183,7 +218,7 @@ void dump_MBC1(void)
 
     if(banks > 2){
         for(int bank = 2; bank < banks; bank++){    // Dump subsequent banks
-            bank_switch(bank);
+            bank_switch(bank, 1);
             for(int addr = 0x4000; addr < 0x8000; addr++){  // Read new bank
                 byte = GBC_read(addr);
                 HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
@@ -205,7 +240,7 @@ void dump_MBC5(void){
     // printf("\r\n----BEGIN ROM----\r\n");    // Prepare to print rom
 
     for(uint16_t i = 0; i < banks; i++){
-        bank_switch(i);
+        bank_switch(i, 5);
         for(int addr = 0x4000; addr < 0x8000; addr++){
             byte = GBC_read(addr);
             HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);

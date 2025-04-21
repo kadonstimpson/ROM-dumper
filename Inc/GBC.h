@@ -13,7 +13,7 @@ uint8_t GBC_read(uint32_t addr);
 void GBC_write_data(uint8_t byte);
 void GBC_set_data_output(void);
 void GBC_set_data_input(void);
-void bank_switch(uint16_t bank);
+void bank_switch(uint16_t bank, uint8_t mode);
 void GBC_dump_cart(void);
 void dump_MBC0(void);
 void dump_MBC1(void);
