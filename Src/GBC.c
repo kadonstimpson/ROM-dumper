@@ -290,3 +290,39 @@ void dump_MBC5(void){
         }
     }
 }
+
+// MBC6 2 swappable "half" banks, we'll use 0x4000 - 0x5FFF
+void dump_MBC6(void){
+    uint8_t byte = GBC_read(0x0148);    // Read rom size
+    uint32_t banks = (2 << byte) * 2;   // Twice as many "half" banks
+    // printf("\r\nROM Size: %d Kilobytes", banks * 16);
+
+    // printf("\r\n----BEGIN ROM----\r\n");    // Prepare to print rom
+
+    for(uint16_t i = 0; i < banks; i++){
+        bank_switch(i, 6);
+        for(int addr = 0x4000; addr < 0x5FFF; addr++){
+            byte = GBC_read(addr);
+            HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
+            // printf("%02X", byte); 
+        }
+    }
+}
+
+// MBC7 - Bank 0 swapping unconfirmed, use 0x0000 - 0x3FFF if issues
+void dump_MBC7(void){
+    uint8_t byte = GBC_read(0x0148);    // Read rom size
+    uint32_t banks = 2 << byte;         // Convert "size" to banks
+    // printf("\r\nROM Size: %d Kilobytes", banks * 16);
+
+    // printf("\r\n----BEGIN ROM----\r\n");    // Prepare to print rom
+
+    for(uint16_t i = 0; i < banks; i++){
+        bank_switch(i, 7);
+        for(int addr = 0x4000; addr < 0x8000; addr++){
+            byte = GBC_read(addr);
+            HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
+            // printf("%02X", byte); 
+        }
+    }
+}

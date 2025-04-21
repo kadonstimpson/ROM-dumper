@@ -20,3 +20,5 @@ void dump_MBC1(void);   // 1 - 3 ROM dumping largely the same. Could be joined
 void dump_MBC2(void);   // but saves are handled very differently, so leaving
 void dump_MBC3(void);   // separate for now.
 void dump_MBC5(void);
+void dump_MBC6(void);
+void dump_MCB7(void);
