@@ -7,6 +7,9 @@
 #include "main.h"
 #include "uart.h"
 #include "usb_device.h"
+#include "usbd_cdc_if.h"
+
+volatile uint32_t last_isr;
 
 void Init_All(void);
 static void Gyro_SPI2_Init();
@@ -21,7 +24,9 @@ int main(void) {
 
   sd_test();
 
-  while(1){}
+  while(1){
+    CDC_Transmit_FS((uint8_t *)"Hello, host!\\r\\n", 14);
+  }
 }
 
 void Init_All(){
@@ -34,7 +39,7 @@ void Init_All(){
   __HAL_RCC_GPIOC_CLK_ENABLE();
 
   __HAL_RCC_PWR_CLK_ENABLE();   // Enable USB clock and power
-  // MX_USB_DEVICE_Init();      // Hangs, removed temporarily
+  MX_USB_DEVICE_Init();      // Hangs, removed temporarily
  
   HAL_PWR_EnableBkUpAccess(); // Enable access to backup domain
 
@@ -132,4 +137,3 @@ static void USB_ClockEnable(void){
   __HAL_RCC_CRS_CLK_ENABLE();
   __HAL_RCC_USB_CLK_ENABLE();
 }
-
