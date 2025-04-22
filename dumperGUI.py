@@ -21,7 +21,10 @@ def main():
     def on_start():
         port = com_port.get()
         name = file_name.get()
-        #TODO: write code that functions when button is clicked
+        #TODO: set data equal to information read from COM port
+        data = "hello world!\n"
+        with open(name, "w", encoding="utf-8") as f:
+            f.write(data)
 
     #Start button
     start_button = ttk.Button(frame, text="Start Dump", command=on_start)
