@@ -21,9 +21,9 @@ def main():
     def on_start():
         port = com_port.get()
         name = file_name.get()
-        #TODO: set data equal to information read from COM port
-        data = "hello world!\n"
-        with open(name, "w", encoding="utf-8") as f:
+        #TODO: set data equal to the dump over virtual com port
+        data = "hello world!\n" #temp
+        with open(name, "w", encoding="utf-8") as f: #TODO: This may need to be adjusted to account for writing a stream rather than a string
             f.write(data)
 
     #Start button
