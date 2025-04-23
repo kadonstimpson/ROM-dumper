@@ -23,7 +23,7 @@ def main():
     def on_start():
         port = com_port.get()
         baud_rate = 1_000_000
-        n = 1
+        n = 3
         name = file_name.get()
         with serial.Serial(port, baud_rate, timeout=n) as ser, open(name, 'wb') as outfile:
             try:
