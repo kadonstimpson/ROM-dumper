@@ -1,6 +1,8 @@
 import tkinter as tk
+import serial
 from tkinter import ttk
 
+#Small GUI to select a com port and output file to write stream into
 def main():
     root = tk.Tk()
     root.geometry("600x200")
@@ -20,11 +22,19 @@ def main():
     #Executes on button click
     def on_start():
         port = com_port.get()
+        baud_rate = 115200
+        n = 1
         name = file_name.get()
-        #TODO: set data equal to the dump over virtual com port
-        data = "hello world!\n" #temp
-        with open(name, "w", encoding="utf-8") as f: #TODO: This may need to be adjusted to account for writing a stream rather than a string
-            f.write(data)
+        with serial.Serial(port, baud_rate, timeout=n) as ser, open(name, 'wb') as outfile:
+            try:
+                while True:
+                    chunk = ser.read(1024)
+                    if not chunk:
+                        #Nothing was recieved in (n) seconds
+                        continue
+                    outfile.write(chunk)
+            except KeyboardInterrupt:
+                print("Capture stopped")
 
     #Start button
     start_button = ttk.Button(frame, text="Start Dump", command=on_start)
