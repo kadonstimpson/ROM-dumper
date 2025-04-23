@@ -23,26 +23,10 @@ void sd_test()
   UINT bw, br;
   char buffer[64];
 
-  // Init LEDs on PC6–PC9
-  RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
-  GPIO_InitTypeDef gpioInit = {
-    .Pin = GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9,
-    .Mode = GPIO_MODE_OUTPUT_PP,
-    .Pull = GPIO_NOPULL,
-    .Speed = GPIO_SPEED_FREQ_LOW
-  };
-  HAL_GPIO_Init(GPIOC, &gpioInit);
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9, GPIO_PIN_RESET);
-
-  // Initialize RTC
-  MX_RTC_Init();
-  rtc_check_and_set();
-
   // Try to mount
   FRESULT res = f_mount(&fs, "", 1);
   printf("f_mount result = %d\r\n", res);
   if (res != FR_OK) return;
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET); // Mount OK
 
   // Try to open file for writing
   res = f_open(&file, "helloworld.txt", FA_WRITE | FA_CREATE_ALWAYS);
@@ -53,7 +37,6 @@ void sd_test()
   res = f_write(&file, "Hello, STM32 SD write!\n", 23, &bw);
   printf("f_write result = %d, bytes = %u\r\n", res, bw);
   f_close(&file);
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET); // Write OK
 
   // Try to read it back
   res = f_open(&file, "helloworld.txt", FA_READ);
@@ -64,10 +47,6 @@ void sd_test()
   buffer[br] = 0;
   printf("f_read = %d, read %u bytes: %s\r\n", res, br, buffer);
   f_close(&file);
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET); // Read OK
-
-  // All done
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET); // Finish LED
 }
 
 
@@ -131,13 +110,37 @@ uint8_t sd_spi_recv()
   return sd_spi_send(0xFF);
 }
 
-uint8_t sd_send_cmd(uint8_t cmd, uint32_t arg, uint8_t crc) 
-{
-  sd_cs_high();
-  sd_spi_recv(); // idle
-  sd_cs_low();
-  sd_spi_recv(); // extra 8 clocks
+// uint8_t sd_send_cmd(uint8_t cmd, uint32_t arg, uint8_t crc) 
+// {
+//   sd_cs_high();
+//   sd_spi_recv(); // idle
+//   sd_cs_low();
+//   sd_spi_recv(); // extra 8 clocks
 
+//   sd_spi_send(0x40 | cmd);
+//   sd_spi_send((arg >> 24) & 0xFF);
+//   sd_spi_send((arg >> 16) & 0xFF);
+//   sd_spi_send((arg >> 8) & 0xFF);
+//   sd_spi_send(arg & 0xFF);
+//   sd_spi_send(crc);
+
+//   // Wait for a valid response
+//   for (int i = 0; i < 10; i++) {
+//     uint8_t r = sd_spi_recv();
+//     if ((r & 0x80) == 0) return r;
+//   }
+
+//   return 0xFF; // timeout
+// }
+
+uint8_t sd_send_cmd(uint8_t cmd, uint32_t arg, uint8_t crc)
+{
+  sd_cs_high();             // Deselect card
+  sd_spi_recv();            // Give it 8 extra clocks
+  sd_cs_low();              // Select card
+  sd_spi_recv();            // Another 8 clocks after CS low
+
+  // Send command packet
   sd_spi_send(0x40 | cmd);
   sd_spi_send((arg >> 24) & 0xFF);
   sd_spi_send((arg >> 16) & 0xFF);
@@ -145,14 +148,16 @@ uint8_t sd_send_cmd(uint8_t cmd, uint32_t arg, uint8_t crc)
   sd_spi_send(arg & 0xFF);
   sd_spi_send(crc);
 
-  // Wait for a valid response
+  // Wait for valid response (R1: MSB must be 0)
   for (int i = 0; i < 10; i++) {
-    uint8_t r = sd_spi_recv();
-    if ((r & 0x80) == 0) return r;
+      uint8_t r = sd_spi_recv();
+      if ((r & 0x80) == 0) return r;  // Valid response
   }
 
-  return 0xFF; // timeout
+  return 0xFF;  // Timeout
 }
+
+
 
 
 DSTATUS init_sd()
@@ -236,9 +241,11 @@ DRESULT sd_write(const BYTE *buff, LBA_t sector, UINT count)
   if (sd_stat & STA_NOINIT) return RES_NOTRDY;
   if (count != 1) return RES_PARERR; // Only single block supported
 
-  if (sd_send_cmd(24, sector, 0x01) != 0x00) {
+  uint8_t resp = sd_send_cmd(24, sector, 0x01);
+  if (resp != 0x00) {
     sd_cs_high();
-    printf("sd_write error: %d\n\r", RES_ERROR);
+    printf("sd_write error cmd 24: %d\n\r", RES_ERROR);
+    printf("response value: %x\n\r", resp);
     return RES_ERROR;
   }
 
@@ -258,7 +265,7 @@ DRESULT sd_write(const BYTE *buff, LBA_t sector, UINT count)
   uint8_t response = sd_spi_recv();
   if ((response & 0x1F) != 0x05) {
     sd_cs_high();
-    printf("sd_write error: %d\n\r", RES_ERROR);
+    printf("sd_write error response token: %d\n\r", RES_ERROR);
     return RES_ERROR;
   }
 

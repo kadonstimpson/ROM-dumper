@@ -149,8 +149,8 @@ void GBC_dump_cart(void){
     printf("filename = %s\n\r", filename);
 
     // Try to open file for writing
-    // res = f_open(&file, filename, FA_WRITE | FA_CREATE_ALWAYS);
-    res = f_open(&file, "cart.gbc", FA_WRITE | FA_CREATE_ALWAYS);
+    res = f_open(&file, filename, FA_WRITE | FA_CREATE_ALWAYS);
+    // res = f_open(&file, "cart.gbc", FA_WRITE | FA_CREATE_ALWAYS);
     if (res != FR_OK)
     {
         printf("f_open result = %d\r\n", res);
@@ -217,6 +217,7 @@ void GBC_dump_cart(void){
             // printf("\n\rERROR Unsupported MBC");
             break;
     }
+    printf("Done\n\r");
     f_close(&file);
 }
 
@@ -328,28 +329,66 @@ void dump_MBC3(void){
 }
 
 // MBC5 up to 8MiB
-void dump_MBC5(void){
-    uint8_t byte = GBC_read(0x0148);    // Read rom size
-    uint32_t banks = 2 << byte;         // Convert "size" to banks
-    // printf("\r\nROM Size: %d Kilobytes", banks * 16);
+// void dump_MBC5(void){
+//     uint8_t byte = GBC_read(0x0148);    // Read rom size
+//     uint32_t banks = 2 << byte;         // Convert "size" to banks
+//     // printf("\r\nROM Size: %d Kilobytes", banks * 16);
 
-    // printf("\r\n----BEGIN ROM----\r\n");    // Prepare to print rom
+//     // printf("\r\n----BEGIN ROM----\r\n");    // Prepare to print rom
 
-    for(uint16_t i = 0; i < banks; i++){
+//     for(uint16_t i = 0; i < banks; i++){
+//         bank_switch(i, 5);
+//         for(int addr = 0x4000; addr < 0x8000; addr++){
+//             byte = GBC_read(addr);
+//             // HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
+//             // printf("%02X", byte);
+//             FRESULT res = f_write(&file, &byte, 1, &bw);
+//             if (res != FR_OK)
+//             {
+//                 printf("f_write result = %d\r\n", res);
+//                 return;
+//             }
+//         }
+//     }
+// }
+
+void dump_MBC5(void) {
+    uint8_t rom_size = GBC_read(0x0148);    // Read ROM size
+    uint32_t banks = 2 << rom_size;         // Convert size code to # of banks
+    uint8_t buffer[512];
+    UINT bw;
+
+    for (uint16_t i = 0; i < banks; i++) {
         bank_switch(i, 5);
-        for(int addr = 0x4000; addr < 0x8000; addr++){
-            byte = GBC_read(addr);
-            // HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
-            // printf("%02X", byte);
-            FRESULT res = f_write(&file, &byte, 1, &bw);
-            if (res != FR_OK)
-            {
-                printf("f_write result = %d\r\n", res);
+        uint16_t buf_index = 0;
+
+        for (int addr = 0x4000; addr < 0x8000; addr++) {
+            buffer[buf_index++] = GBC_read(addr);
+
+            if (buf_index == 512) {
+                FRESULT res = f_write(&file, buffer, 512, &bw);
+                if (res != FR_OK || bw != 512) {
+                    printf("f_write error = %d, wrote %u bytes\r\n", res, bw);
+                    return;
+                }
+                buf_index = 0;
+            }
+        }
+
+        // Write remaining (if any)
+        if (buf_index > 0) {
+            FRESULT res = f_write(&file, buffer, buf_index, &bw);
+            if (res != FR_OK || bw != buf_index) {
+                printf("f_write (tail) error = %d, wrote %u bytes\r\n", res, bw);
                 return;
             }
         }
+
+        // // Optional: flush to SD card after each bank
+        // f_sync(&file);
     }
 }
+
 
 // MBC6 2 swappable "half" banks, we'll use 0x4000 - 0x5FFF
 void dump_MBC6(void){
