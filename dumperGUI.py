@@ -11,7 +11,7 @@ def main():
 
     #COM dropdown
     ttk.Label(frame, text="Select COM Port:").grid(row=0, column=0, sticky="w")
-    com_port = ttk.Combobox(frame, values=["COM1", "COM2", "COM3"], width=15, state="readonly")
+    com_port = ttk.Combobox(frame, values=["COM1", "COM2", "COM3"], width=15)
     com_port.grid(row=0, column=1, pady=5, sticky="w")
 
     #File entry
@@ -22,7 +22,7 @@ def main():
     #Executes on button click
     def on_start():
         port = com_port.get()
-        baud_rate = 115200
+        baud_rate = 1_000_000
         n = 1
         name = file_name.get()
         with serial.Serial(port, baud_rate, timeout=n) as ser, open(name, 'wb') as outfile:
