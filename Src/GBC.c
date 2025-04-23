@@ -5,6 +5,8 @@
 #include <stdio.h>
 
 static uint8_t data_bus_mode = 0xFF;  // 0 = input, 1 = output, 0xFF = uninitialized
+FIL file;
+UINT bw, br;
 
 void GBC_test(void){
     // GBC_read_bank(0x0000);
@@ -129,10 +131,31 @@ void bank_switch(uint16_t bank, uint8_t mode){    // This was written for MBC5 S
 void GBC_dump_cart(void){
     // === DEBUG OUTPUT ===
     // printf("\r\nCatridge Title: ");
-    // for(int addr = 0x134; addr < 0x144; addr++){
-    //     int byte = GBC_read(addr);
-    //     printf("%c", byte);
-    // }
+    char title[17];
+    int i = 0;
+
+    // read title
+    for(int addr = 0x134; addr < 0x144; addr++){
+        title[i] = GBC_read(addr);
+        i++;
+    }
+    title[16] = '\0'; //add null terminator at end
+
+    //file variables
+    char filename[32];
+    FRESULT res;
+
+    sprintf(&filename, "%s.gbc", title);
+    printf("filename = %s\n\r", filename);
+
+    // Try to open file for writing
+    // res = f_open(&file, filename, FA_WRITE | FA_CREATE_ALWAYS);
+    res = f_open(&file, "cart.gbc", FA_WRITE | FA_CREATE_ALWAYS);
+    if (res != FR_OK)
+    {
+        printf("f_open result = %d\r\n", res);
+        return;
+    }
 
     // printf("\r\nMemory Banking Scheme: ");
     uint32_t addr = 0x0147;
@@ -194,6 +217,7 @@ void GBC_dump_cart(void){
             // printf("\n\rERROR Unsupported MBC");
             break;
     }
+    f_close(&file);
 }
 
 // MBC0 (No MBC) 32KiB Only
@@ -201,7 +225,13 @@ void dump_MBC0(void){
     uint8_t byte = 0x00;
     for(uint16_t addr = 0x0000; addr < 0x8000; addr++){
         byte = GBC_read(addr);
-        HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
+        // HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
+        FRESULT res = f_write(&file, &byte, 1, &bw);
+        if (res != FR_OK)
+        {
+            printf("f_write result = %d\r\n", res);
+            return;
+        }
     }
 }
 
@@ -213,7 +243,7 @@ void dump_MBC1(void){
 
     for(uint16_t addr = 0x0000; addr < 0x8000; addr++){ // Dump first two banks
         byte = GBC_read(addr);
-        HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
+        // HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
     }
 
     if(banks > 2){
@@ -221,8 +251,14 @@ void dump_MBC1(void){
             bank_switch(bank, 1);
             for(int addr = 0x4000; addr < 0x8000; addr++){  // Read new bank
                 byte = GBC_read(addr);
-                HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
+                // HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
                 // printf("%02X", byte); 
+                FRESULT res = f_write(&file, &byte, 1, &bw);
+                if (res != FR_OK)
+                {
+                    printf("f_write result = %d\r\n", res);
+                    return;
+                }
             }
         }
     }
@@ -236,7 +272,13 @@ void dump_MBC2(void){ // Handled as MBC1
 
     for(uint16_t addr = 0x0000; addr < 0x8000; addr++){ // Dump first two banks
         byte = GBC_read(addr);
-        HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
+        // HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
+        FRESULT res = f_write(&file, &byte, 1, &bw);
+        if (res != FR_OK)
+        {
+            printf("f_write result = %d\r\n", res);
+            return;
+        }
     }
 
     if(banks > 2){
@@ -244,8 +286,14 @@ void dump_MBC2(void){ // Handled as MBC1
             bank_switch(bank, 2);
             for(int addr = 0x4000; addr < 0x8000; addr++){  // Read new bank
                 byte = GBC_read(addr);
-                HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
+                // HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
                 // printf("%02X", byte); 
+                FRESULT res = f_write(&file, &byte, 1, &bw);
+                if (res != FR_OK)
+                {
+                    printf("f_write result = %d\r\n", res);
+                    return;
+                }
             }
         }
     }
@@ -258,7 +306,7 @@ void dump_MBC3(void){
 
     for(uint16_t addr = 0x0000; addr < 0x8000; addr++){ // Dump first two banks
         byte = GBC_read(addr);
-        HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
+        // HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
     }
 
     if(banks > 2){
@@ -266,8 +314,14 @@ void dump_MBC3(void){
             bank_switch(bank, 3);
             for(int addr = 0x4000; addr < 0x8000; addr++){  // Read new bank
                 byte = GBC_read(addr);
-                HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
-                // printf("%02X", byte); 
+                // HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
+                // printf("%02X", byte);
+                FRESULT res = f_write(&file, &byte, 1, &bw);
+                if (res != FR_OK)
+                {
+                    printf("f_write result = %d\r\n", res);
+                    return;
+                }
             }
         }
     }
@@ -285,8 +339,14 @@ void dump_MBC5(void){
         bank_switch(i, 5);
         for(int addr = 0x4000; addr < 0x8000; addr++){
             byte = GBC_read(addr);
-            HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
-            // printf("%02X", byte); 
+            // HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
+            // printf("%02X", byte);
+            FRESULT res = f_write(&file, &byte, 1, &bw);
+            if (res != FR_OK)
+            {
+                printf("f_write result = %d\r\n", res);
+                return;
+            }
         }
     }
 }
@@ -303,8 +363,14 @@ void dump_MBC6(void){
         bank_switch(i, 6);
         for(int addr = 0x4000; addr < 0x5FFF; addr++){
             byte = GBC_read(addr);
-            HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
+            // HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
             // printf("%02X", byte); 
+            FRESULT res = f_write(&file, &byte, 1, &bw);
+            if (res != FR_OK)
+            {
+                printf("f_write result = %d\r\n", res);
+                return;
+            }
         }
     }
 }
@@ -321,8 +387,14 @@ void dump_MBC7(void){
         bank_switch(i, 7);
         for(int addr = 0x4000; addr < 0x8000; addr++){
             byte = GBC_read(addr);
-            HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
-            // printf("%02X", byte); 
+            // HAL_UART_Transmit(&huart1, &byte, 1, HAL_MAX_DELAY);
+            // printf("%02X", byte);
+            FRESULT res = f_write(&file, &byte, 1, &bw);
+            if (res != FR_OK)
+            {
+                printf("f_write result = %d\r\n", res);
+                return;
+            }
         }
     }
 }

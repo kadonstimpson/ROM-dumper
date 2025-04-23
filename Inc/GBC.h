@@ -1,5 +1,6 @@
 #include "stm32f0xx.h"
 #include "stm32f0xx_hal.h"
+#include "ff.h"
 
 #define GBC_ADDR            GPIO_PIN_All                            // P0 - P15 (GPIOC) 
 #define GBC_DAT             (GPIO_PIN_All & ((uint16_t)0x00FF))    // P0 - P7  (GPIOB)

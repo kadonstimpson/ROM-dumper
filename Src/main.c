@@ -15,14 +15,25 @@ void Init_All(void);
 static void Gyro_SPI2_Init();
 static void USB_ClockEnable();
 
+FATFS fs;
+
 int main(void) {
   Init_All();   // Add any additional initialization here
 
-  GBA_test();   // Test GBA stuff here
+  // try to mount sd card
+  FRESULT res = f_mount(&fs, "", 1);
+
+  if (res != FR_OK)
+  {
+    printf("f_mount result = %d\r\n", res);
+  }
+
+  // GBA_test();   // Test GBA stuff here
 
   GBC_test();
 
-  sd_test();
+  f_unmount("");
+  // sd_test();
 
   while(1){
     CDC_Transmit_FS((uint8_t *)"Hello, host!\\r\\n", 14);
@@ -50,6 +61,9 @@ void Init_All(){
   Gyro_SPI2_Init();
   GPIO_UART1_Init();  
   UART1_Init(); 
+  MX_RTC_Init();
+  rtc_check_and_set();
+
   setvbuf(stdout, NULL, _IONBF, 0); // make printf unbuffered 
 
   GPIO_InitTypeDef RDWR = {0};  // Upper address bus

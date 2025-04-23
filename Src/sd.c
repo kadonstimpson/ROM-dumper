@@ -16,44 +16,12 @@ void sd_cs_high(void)
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET);
 }
 
-// void sd_test()
-// {
-//   //init rtc
-//   MX_RTC_Init();
-//   rtc_check_and_set();
-
-//   FATFS fs;
-//   FIL file;
-//   UINT bw;
-
-//   if (f_mount(&fs, "", 1) == FR_OK) //mount filesystem (inits sd card)
-//   {
-//     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET);  // Turn on red LED
-//     if (f_open(&file, "helloworld.txt", FA_WRITE | FA_CREATE_ALWAYS) == FR_OK)
-//     {
-//       f_write(&file, "Hello, STM32 SD write!\n", 23, &bw);
-//       f_close(&file);
-//       HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);  // Turn on LED
-//     }
-
-//     char buffer[64];
-//     UINT br;
-//     if (f_open(&file, "helloworld.txt", FA_READ) == FR_OK)
-//     {
-//       f_read(&file, buffer, sizeof(buffer) - 1, &br);
-//       buffer[br] = 0;
-//       f_close(&file);
-//       // Output buffer to UART or screen
-//     }
-//   }
-// }
 void sd_test()
 {
   FATFS fs;
   FIL file;
   UINT bw, br;
   char buffer[64];
-  char msg[64];
 
   // Init LEDs on PC6–PC9
   RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
@@ -83,8 +51,7 @@ void sd_test()
 
   // Write to file
   res = f_write(&file, "Hello, STM32 SD write!\n", 23, &bw);
-  sprintf(msg, "f_write result = %d, bytes = %u\r\n", res, bw);
-  send_serial(msg);
+  printf("f_write result = %d, bytes = %u\r\n", res, bw);
   f_close(&file);
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET); // Write OK
 
@@ -163,28 +130,6 @@ uint8_t sd_spi_recv()
 {
   return sd_spi_send(0xFF);
 }
-
-// void sd_send_cmd0()
-// {
-//   for (int i = 0; i < 10; i++) sd_spi_send(0xFF); // 80 clocks
-
-//   sd_cs_low();
-
-//   sd_spi_send(0x40);     // CMD0
-//   sd_spi_send(0x00);
-//   sd_spi_send(0x00);
-//   sd_spi_send(0x00);
-//   sd_spi_send(0x00);
-//   sd_spi_send(0x95);     // Valid CRC for CMD0
-
-//   for (int i = 0; i < 8; i++) {
-//     uint8_t r = sd_spi_recv();
-//     if (r == 0x01) break;
-//   }
-
-//   sd_cs_high();
-//   sd_spi_recv(); // extra 8 clocks
-// }
 
 uint8_t sd_send_cmd(uint8_t cmd, uint32_t arg, uint8_t crc) 
 {
@@ -293,6 +238,7 @@ DRESULT sd_write(const BYTE *buff, LBA_t sector, UINT count)
 
   if (sd_send_cmd(24, sector, 0x01) != 0x00) {
     sd_cs_high();
+    printf("sd_write error: %d\n\r", RES_ERROR);
     return RES_ERROR;
   }
 
@@ -312,6 +258,7 @@ DRESULT sd_write(const BYTE *buff, LBA_t sector, UINT count)
   uint8_t response = sd_spi_recv();
   if ((response & 0x1F) != 0x05) {
     sd_cs_high();
+    printf("sd_write error: %d\n\r", RES_ERROR);
     return RES_ERROR;
   }
 
