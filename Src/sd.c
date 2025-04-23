@@ -58,10 +58,10 @@ void sd_test()
   // Init LEDs on PC6–PC9
   RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
   GPIO_InitTypeDef gpioInit = {
-      .Pin = GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9,
-      .Mode = GPIO_MODE_OUTPUT_PP,
-      .Pull = GPIO_NOPULL,
-      .Speed = GPIO_SPEED_FREQ_LOW
+    .Pin = GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9,
+    .Mode = GPIO_MODE_OUTPUT_PP,
+    .Pull = GPIO_NOPULL,
+    .Speed = GPIO_SPEED_FREQ_LOW
   };
   HAL_GPIO_Init(GPIOC, &gpioInit);
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9, GPIO_PIN_RESET);
@@ -72,15 +72,13 @@ void sd_test()
 
   // Try to mount
   FRESULT res = f_mount(&fs, "", 1);
-  sprintf(msg, "f_mount result = %d\r\n", res);
-  send_serial(msg);
+  printf("f_mount result = %d\r\n", res);
   if (res != FR_OK) return;
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET); // Mount OK
 
   // Try to open file for writing
   res = f_open(&file, "helloworld.txt", FA_WRITE | FA_CREATE_ALWAYS);
-  sprintf(msg, "f_open result = %d\r\n", res);
-  send_serial(msg);
+  printf("f_open result = %d\r\n", res);
   if (res != FR_OK) return;
 
   // Write to file
@@ -92,14 +90,12 @@ void sd_test()
 
   // Try to read it back
   res = f_open(&file, "helloworld.txt", FA_READ);
-  sprintf(msg, "f_open (read) = %d\r\n", res);
-  send_serial(msg);
+  printf("f_open (read) = %d\r\n", res);
   if (res != FR_OK) return;
 
   res = f_read(&file, buffer, sizeof(buffer) - 1, &br);
   buffer[br] = 0;
-  sprintf(msg, "f_read = %d, read %u bytes: %s\r\n", res, br, buffer);
-  send_serial(msg);
+  printf("f_read = %d, read %u bytes: %s\r\n", res, br, buffer);
   f_close(&file);
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET); // Read OK
 
