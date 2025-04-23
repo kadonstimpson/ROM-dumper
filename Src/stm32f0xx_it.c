@@ -18,7 +18,6 @@
   ******************************************************************************
   */
 #include "main.h"
-#include "usbd_conf.h"
 #include <stm32f0xx_hal.h>
 #include <stm32f0xx_it.h>
 
@@ -97,7 +96,7 @@ void USB_IRQHandler(void)
   /* USER CODE BEGIN USB_IRQn 0 */
 
   /* USER CODE END USB_IRQn 0 */
-  HAL_PCD_IRQHandler(&hpcd_USB_FS);
+
   /* USER CODE BEGIN USB_IRQn 1 */
 
   /* USER CODE END USB_IRQn 1 */
