@@ -11,35 +11,38 @@
 static uint8_t GBA_bus_mode = 0xFF;  // 0 = data input, 1 =  data output, 2 = address output 0xFF = uninitialized
 
 void GBA_test(void){
-    #define CHUNK_BYTES   64                 // 32 half‑words  (=64 bytes)
+    #define CHUNK_BYTES     64                      // 32 half‑words  (=64 bytes)
+    #define MAX_ROM_SIZE    (32 * 1024 * 1024)      // 32 MiB max
+    #define BLANK_1         0xFFFF
+    #define BLANK_2         0x0000
+
     uint8_t raw[CHUNK_BYTES];
+    uint8_t k = 0;
 
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_RESET);   // enable /CS
     __NOP(); __NOP();
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_SET);   // enable /CS
     __NOP(); __NOP();
     
-    int k = 0;
     uint32_t rom_size = 0x800000;         // 8 MiB GBA title
-    for (uint32_t addr = 0; addr < rom_size; addr += 2) {
-    
-        uint16_t w = GBA_read_addr(addr >> 1);  // read half‑word
+
+    for (uint32_t addr = 0; addr < (rom_size >> 1); addr++) {
+        uint16_t w = GBA_read_addr(addr);  // read half‑word
         w = (w << 8) | (w >> 8);                // byte‑swap
     
         raw[k++] = w >> 8;      // Write low byte
         raw[k++] = w & 0xFF;    // Write high byte
 
         if (k == CHUNK_BYTES) {
-            // CDC_Transmit_FS(&raw, CHUNK_BYTES);
-            HAL_UART_Transmit(&huart1, raw, CHUNK_BYTES, HAL_MAX_DELAY);
+            while (CDC_Transmit_FS(raw, CHUNK_BYTES) == USBD_BUSY);
             k = 0;
         }
     }
     
     // last partial chunk
-    if (k)
-        HAL_UART_Transmit(&huart1, raw, k, HAL_MAX_DELAY);
-        // CDC_Transmit_FS(&raw, k);
+    if (k){
+        while (CDC_Transmit_FS(raw, k) == USBD_BUSY);
+    }
 
 }
 
@@ -104,61 +107,3 @@ uint16_t GBA_read_addr(uint32_t addr){
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_SET);   // disable /CS
     return word;
 }
-
-// --- Eric's Functions Below ---
-
-// void set_address(uint16_t addr) {
-//     // 写入 PC0-PC15
-//     for (int i = 0; i < 16; i++) {
-//         HAL_GPIO_WritePin(GPIOC, (1 << i), (addr & (1 << i)) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-//     }
-// }
-
-// uint8_t read_data_byte(void) {
-//     uint8_t value = 0;
-//     for (int i = 0; i < 8; i++) {
-//         value |= (HAL_GPIO_ReadPin(DATA_PORT, (1 << i)) << i);
-//     }
-//     return value;
-// }
-
-// --- Cubby's Test Functions Below ---
-
-// void GBA_write_addr(uint32_t addr){
-
-//     __HAL_RCC_GPIOB_CLK_ENABLE();   // Enable GPIOB clock
-//     __HAL_RCC_GPIOC_CLK_ENABLE();   // Enable GPIOC clock
-
-//     GPIO_InitTypeDef ADDR_H = {0};  // Upper address bus
-//     ADDR_H.Pin = GBA_ADDR_H;
-//     ADDR_H.Mode = GPIO_MODE_OUTPUT_PP;  // Push-pull output
-//     ADDR_H.Pull = GPIO_NOPULL;
-//     ADDR_H.Speed = GPIO_SPEED_FREQ_LOW;
-
-//     GPIO_InitTypeDef ADDR_L = {0};  // Lower address bus
-//     ADDR_L.Pin = GBA_ADDR_L;
-//     ADDR_L.Mode = GPIO_MODE_OUTPUT_PP;  // Push-pull output
-//     ADDR_L.Pull = GPIO_NOPULL;
-//     ADDR_L.Speed = GPIO_SPEED_FREQ_LOW;
-
-//     HAL_GPIO_Init(GPIOC, &ADDR_H);
-//     HAL_GPIO_Init(GPIOB, &ADDR_L);
-
-//     GPIOC->ODR = (addr >> 8) & 0xFFFF;
-//     GPIOB->ODR = (addr >> 24) & 0x00FF;
-
-// }
-
-// uint32_t GBA_read(void){
-//     GPIO_InitTypeDef GPIO_InitStruct = {0};
-
-//     GPIO_InitStruct.Pin = GPIO_PIN_All;
-//     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-//     GPIO_InitStruct.Pull = GPIO_NOPULL;
-
-//     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-//     uint32_t data = GPIOC->IDR & 0xFFFF;     // Read input
-
-//     return(data);
-// }

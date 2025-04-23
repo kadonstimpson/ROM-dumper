@@ -20,13 +20,11 @@ int main(void) {
 
   GBA_test();   // Test GBA stuff here
 
-  GBC_test();
+  // GBC_test();
 
   sd_test();
 
-  while(1){
-    CDC_Transmit_FS((uint8_t *)"Hello, host!\\r\\n", 14);
-  }
+  while(1){}
 }
 
 void Init_All(){
