@@ -92,6 +92,7 @@
 
 /** CDC Interface callback. */
 extern USBD_CDC_ItfTypeDef USBD_Interface_fops_FS;
+extern volatile uint8_t go_flag;
 
 /* USER CODE BEGIN EXPORTED_VARIABLES */
 

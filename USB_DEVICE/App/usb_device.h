@@ -33,6 +33,8 @@
 
 /* USER CODE BEGIN INCLUDE */
 
+USBD_HandleTypeDef hUsbDeviceFS;
+
 /* USER CODE END INCLUDE */
 
 /** @addtogroup USBD_OTG_DRIVER

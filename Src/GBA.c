@@ -1,6 +1,7 @@
 #include "GBA.h"
 #include "uart.h"
 #include "usbd_cdc_if.h"
+#include "usb_device.h"
 
 static uint8_t GBA_bus_mode = 0xFF;  // 0 = data input, 1 =  data output, 2 = address output 0xFF = uninitialized
 
@@ -15,7 +16,7 @@ void GBA_test(void){
     uint8_t k = 0;
     uint8_t blank_count = 0;
 
-    while (CDC_Transmit_FS((uint8_t)0x00, 1) == USBD_BUSY);     // Wait for Serial Port to open    
+    while(!go_flag);                    // Wait for Serial Port to open    
 
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_RESET);      // enable /CS
     __NOP(); __NOP();

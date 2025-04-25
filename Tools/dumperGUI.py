@@ -49,6 +49,8 @@ def main():
         n = 3
         name = file_name.get()
         with serial.Serial(port, baud_rate, timeout=n) as ser, open(name, 'wb') as outfile:
+            ser.write(b'G')          # handshake
+            ser.flush()              # make sure it leaves the host buffer
             try:
                 while True:
                     chunk = ser.read(1024)
