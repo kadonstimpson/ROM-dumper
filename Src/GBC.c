@@ -5,10 +5,12 @@
 #include <stdio.h>
 
 static uint8_t data_bus_mode = 0xFF;  // 0 = input, 1 = output, 0xFF = uninitialized
-FIL file;
+FIL gbc_file;
 uint8_t gbc_buf[512]; //global write buffer
-uint16_t buf_index = 0; //buffer index
-UINT bw = 0;
+uint16_t gbc_buf_index = 0; //buffer index
+UINT gbc_bw = 0;
+extern FATFS fs;
+
 
 
 void GBC_test(void){
@@ -152,8 +154,8 @@ void GBC_dump_cart(void){
   printf("filename = %s\n\r", filename);
 
   // Try to open file for writing
-  res = f_open(&file, filename, FA_WRITE | FA_CREATE_ALWAYS);
-  // res = f_open(&file, "cart.gbc", FA_WRITE | FA_CREATE_ALWAYS);
+  res = f_open(&gbc_file, filename, FA_WRITE | FA_CREATE_ALWAYS);
+  // res = f_open(&gbc_file, "cart.gbc", FA_WRITE | FA_CREATE_ALWAYS);
   if (res != FR_OK)
   {
     printf("f_open result = %d\r\n", res);
@@ -224,13 +226,13 @@ void GBC_dump_cart(void){
       break;
   }
   printf("Done\n\r");
-  f_close(&file);
+  f_close(&gbc_file);
 }
 
 void GBC_dump_MBC(uint8_t mbc_type) {
   uint8_t rom_size = GBC_read(0x0148);
   uint32_t banks = 2 << rom_size;
-  buf_index = 0;
+  gbc_buf_index = 0;
 
   // Handle MBC6 special case
   if (mbc_type == 6)
@@ -238,7 +240,7 @@ void GBC_dump_MBC(uint8_t mbc_type) {
 
   for (uint16_t i = (mbc_type == 0 ? 0 : 1); i < banks; i++) {
     bank_switch(i, mbc_type);
-    buf_index = 0;
+    gbc_buf_index = 0;
 
     // Most MBCs have 0x4000 - 0x7FFF
     uint16_t start = 0x4000;
@@ -252,22 +254,22 @@ void GBC_dump_MBC(uint8_t mbc_type) {
     }
 
     for (uint32_t addr = start; addr < end; addr++) {
-      gbc_buf[buf_index++] = GBC_read(addr);
-      if (buf_index == 512) {
-        FRESULT res = f_write(&file, gbc_buf, 512, &bw);
-        if (res != FR_OK || bw != 512) {
-          printf("f_write error = %d, wrote %u bytes\r\n", res, bw);
+      gbc_buf[gbc_buf_index++] = GBC_read(addr);
+      if (gbc_buf_index == 512) {
+        FRESULT res = f_write(&gbc_file, gbc_buf, 512, &gbc_bw);
+        if (res != FR_OK || gbc_bw != 512) {
+          printf("f_write error = %d, wrote %u bytes\r\n", res, gbc_bw);
           return;
         }
-        buf_index = 0;
+        gbc_buf_index = 0;
       }
     }
 
     // Write any remaining data
-    if (buf_index > 0) {
-      FRESULT res = f_write(&file, gbc_buf, buf_index, &bw);
-      if (res != FR_OK || bw != buf_index) {
-        printf("f_write (tail) error = %d, wrote %u bytes\r\n", res, bw);
+    if (gbc_buf_index > 0) {
+      FRESULT res = f_write(&gbc_file, gbc_buf, gbc_buf_index, &gbc_bw);
+      if (res != FR_OK || gbc_bw != gbc_buf_index) {
+        printf("f_write (tail) error = %d, wrote %u bytes\r\n", res, gbc_bw);
         return;
       }
     }
