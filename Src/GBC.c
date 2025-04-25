@@ -6,9 +6,9 @@
 
 static uint8_t data_bus_mode = 0xFF;  // 0 = input, 1 = output, 0xFF = uninitialized
 FIL gbc_file;
-uint8_t gbc_buf[512]; //global write buffer
-uint16_t gbc_buf_index = 0; //buffer index
-UINT gbc_bw = 0;
+volatile uint8_t gbc_buf[512]; //global write buffer
+volatile uint16_t gbc_buf_index = 0; //buffer index
+volatile UINT gbc_bw = 0;
 extern FATFS fs;
 
 
@@ -208,7 +208,8 @@ void GBC_dump_cart(void){
     case 0x1D:
     case 0x1E:
       // printf("\n\rMBC5");
-      GBC_dump_MBC(5);
+    //   GBC_dump_MBC(5);
+        dump_MBC5();
       break;
 
     case 0x20:
@@ -225,7 +226,7 @@ void GBC_dump_cart(void){
       // printf("\n\rERROR Unsupported MBC");
       break;
   }
-  printf("Done\n\r");
+  printf("Successfully dumped %s to %s\n\r", title, filename);
   f_close(&gbc_file);
 }
 
@@ -270,6 +271,46 @@ void GBC_dump_MBC(uint8_t mbc_type) {
       FRESULT res = f_write(&gbc_file, gbc_buf, gbc_buf_index, &gbc_bw);
       if (res != FR_OK || gbc_bw != gbc_buf_index) {
         printf("f_write (tail) error = %d, wrote %u bytes\r\n", res, gbc_bw);
+        return;
+      }
+    }
+  }
+}
+
+void dump_MBC5(void) 
+{
+  uint8_t rom_size = GBC_read(0x0148);    // Read ROM size
+  uint32_t banks = 2 << rom_size;         // Convert size code to # of banks
+  uint8_t buffer[512];
+  UINT bw;
+  const uint32_t progress_step = (512 * 1024) >> 1; // Half-words per 512 KiB
+
+  for (uint16_t i = 0; i < banks; i++) {
+    bank_switch(i, 5);
+    uint16_t buf_index = 0;
+
+    for (int addr = 0x4000; addr < 0x8000; addr++) {
+      buffer[buf_index++] = GBC_read(addr);
+
+      if (buf_index == 512) 
+      {
+        FRESULT res = f_write(&gbc_file, buffer, 512, &bw);
+        if (res != FR_OK || bw != 512) 
+        {
+          printf("f_write error = %d, wrote %u bytes\r\n", res, bw);
+          return;
+        }
+        buf_index = 0;
+      }
+    }
+
+    // Write remaining (if any)
+    if (buf_index > 0) 
+    {
+      FRESULT res = f_write(&gbc_file, buffer, buf_index, &bw);
+      if (res != FR_OK || bw != buf_index) 
+      {
+        printf("f_write (tail) error = %d, wrote %u bytes\r\n", res, bw);
         return;
       }
     }

@@ -17,3 +17,4 @@ void GBC_set_data_input(void);
 void bank_switch(uint16_t bank, uint8_t mode);
 void GBC_dump_cart(void);
 void GBC_dump_MBC(uint8_t mbc_type);
+void dump_MBC5(void);
