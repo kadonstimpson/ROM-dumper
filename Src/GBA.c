@@ -2,33 +2,27 @@
 #include "uart.h"
 #include "usbd_cdc_if.h"
 
-// #define DATA_PORT GPIOC
-// #define ADDR_LOW_PORT GPIOC   // PC0-PC15
-// #define ADDR_HIGH_PORT GPIOB  // PB0-PB7
-// #define CART_RD_PORT GPIOB
-// #define CART_RD_PIN GPIO_PIN_10
-
 static uint8_t GBA_bus_mode = 0xFF;  // 0 = data input, 1 =  data output, 2 = address output 0xFF = uninitialized
 
 void GBA_test(void){
-    #define CHUNK_BYTES     64                      // 32 half‑words  (=64 bytes)
-    #define MAX_ROM_SIZE    (32 * 1024 * 1024)      // 32 MiB max
-    #define BLANK_1         0xFFFF
-    #define BLANK_2         0x0000
+    #define CHUNK_BYTES         64                      // 32 half‑words  (=64 bytes)
+    #define MAX_ROM_SIZE        (32 * 1024 * 1024)      // 32 MiB max
+    #define MAX_BLANK_BYTES     (2 * 1024)
+    #define BLANK_1             0xFFFF
+    #define BLANK_2             0x0000
 
     uint8_t raw[CHUNK_BYTES];
     uint8_t k = 0;
+    uint8_t blank_count = 0;
 
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_RESET);   // enable /CS
     __NOP(); __NOP();
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_SET);   // enable /CS
     __NOP(); __NOP();
-    
-    uint32_t rom_size = 0x800000;         // 8 MiB GBA title
 
-    for (uint32_t addr = 0; addr < (rom_size >> 1); addr++) {
-        uint16_t w = GBA_read_addr(addr);  // read half‑word
-        w = (w << 8) | (w >> 8);                // byte‑swap
+    for (uint32_t addr = 0x000000; addr < (MAX_ROM_SIZE >> 1); addr++) {
+        uint16_t w = GBA_read_addr(addr);   // read half‑word
+        w = (w << 8) | (w >> 8);            // byte‑swap
     
         raw[k++] = w >> 8;      // Write low byte
         raw[k++] = w & 0xFF;    // Write high byte
@@ -37,11 +31,7 @@ void GBA_test(void){
             while (CDC_Transmit_FS(raw, CHUNK_BYTES) == USBD_BUSY);
             k = 0;
         }
-    }
-    
-    // last partial chunk
-    if (k){
-        while (CDC_Transmit_FS(raw, k) == USBD_BUSY);
+
     }
 
 }
