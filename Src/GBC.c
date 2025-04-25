@@ -126,7 +126,7 @@ void bank_switch(uint16_t bank, uint8_t mode){    // This was written for MBC5 S
       GBC_write_addr(0x2000); // Select bank
       GBC_write_data(bank);
 
-    defualt:    // Weird MBC types (MMM01, M161, HuC1, HuC-3, etc.) tbd
+    default:    // Weird MBC types (MMM01, M161, HuC1, HuC-3, etc.) tbd
       break;  
   }
 }
