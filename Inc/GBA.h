@@ -11,3 +11,4 @@ void GBA_set_data_input(void);
 void GBA_set_address_output(void);
 void GBA_write_addr(uint32_t addr);
 uint16_t GBA_read_addr(uint32_t addr);
+void GBA_dump_cart(void);

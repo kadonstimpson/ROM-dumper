@@ -13,6 +13,7 @@
 
 // Test function
 void sd_test(void);
+void sd_cmd_test();
 
 // Hardware initialization
 void init_spi_sd(void);

@@ -20,6 +20,8 @@ FATFS fs;
 int main(void) {
   Init_All();   // Add any additional initialization here
 
+  // initialize sd card
+  // disk_initialize(0);
   // try to mount sd card
   FRESULT res = f_mount(&fs, "", 1);
 
@@ -30,7 +32,10 @@ int main(void) {
 
   // GBA_test();   // Test GBA stuff here
 
-  GBC_test();
+  // GBC_test();
+  GBA_test();
+  // sd_cmd_test();
+  // sd_test();
 
   f_unmount("");
   // sd_test();
