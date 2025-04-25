@@ -1,8 +1,21 @@
 import tkinter as tk
 import serial
+from serial.tools import list_ports
+from serial.tools.list_ports_common import ListPortInfo
 from tkinter import ttk
 
 #Small GUI to select a com port and output file to write stream into
+
+# ---------- Helpers ----------
+
+def available_ports() -> list[str]:
+    return [p.device for p in list_ports.comports()]
+
+def label(info: ListPortInfo) -> str:
+    return f"{info.device} - {info.description or 'unknown'}" 
+
+# ---------- GUI ----------
+
 def main():
     root = tk.Tk()
     root.geometry("600x200")
@@ -11,8 +24,14 @@ def main():
 
     #COM dropdown
     ttk.Label(frame, text="Select COM Port:").grid(row=0, column=0, sticky="w")
-    com_port = ttk.Combobox(frame, values=["COM1", "COM2", "COM3"], width=15)
+    port_infos = list_ports.comports()
+    port_labels = [label(p) for p in port_infos]
+    port_map = {lbl: p.device for lbl, p in zip(port_labels, port_infos)}
+    port_map = dict(zip(port_labels, (p.device for p in port_infos)))
+    com_port = ttk.Combobox(frame, values=port_labels, width=40)
     com_port.grid(row=0, column=1, pady=5, sticky="w")
+    if port_labels:             # Preselect 1st port
+        com_port.current(0)
 
     #File entry
     ttk.Label(frame, text="Output File Name:").grid(row=1, column=0, sticky="w")
@@ -21,7 +40,11 @@ def main():
 
     #Executes on button click
     def on_start():
-        port = com_port.get()
+        sel_label = com_port.get()  # Selection from list
+        if not sel_label:
+            tk.messagebox.showerror("No port", "Please select a serial port")
+            return
+        port = port_map[sel_label]  # Actaul raw port name
         baud_rate = 1_000_000
         n = 3
         name = file_name.get()
