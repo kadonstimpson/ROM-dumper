@@ -139,8 +139,8 @@ void GBC_dump_cart(void){
 
   // read title
   for(int addr = 0x134; addr < 0x144; addr++){
-      title[i] = GBC_read(addr);
-      i++;
+    title[i] = GBC_read(addr);
+    i++;
   }
   title[16] = '\0'; //add null terminator at end
 
@@ -156,8 +156,8 @@ void GBC_dump_cart(void){
   // res = f_open(&file, "cart.gbc", FA_WRITE | FA_CREATE_ALWAYS);
   if (res != FR_OK)
   {
-      printf("f_open result = %d\r\n", res);
-      return;
+    printf("f_open result = %d\r\n", res);
+    return;
   }
 
   // printf("\r\nMemory Banking Scheme: ");
