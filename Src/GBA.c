@@ -15,9 +15,11 @@ void GBA_test(void){
     uint8_t k = 0;
     uint8_t blank_count = 0;
 
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_RESET);   // enable /CS
+    while (CDC_Transmit_FS((uint8_t)0x00, 1) == USBD_BUSY);     // Wait for Serial Port to open    
+
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_RESET);      // enable /CS
     __NOP(); __NOP();
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_SET);   // enable /CS
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_SET);        // enable /CS
     __NOP(); __NOP();
 
     for (uint32_t addr = 0x000000; addr < (MAX_ROM_SIZE >> 1); addr++) {
