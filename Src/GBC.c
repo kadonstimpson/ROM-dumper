@@ -168,20 +168,20 @@ void GBC_dump_cart(void){
     case 0x08:
     case 0x09:
       // printf("\n\rMBC0");
-      dump_MBC0();
+      GBC_dump_MBC(0);
       break;
 
     case 0x01:
     case 0x02:
     case 0x03:
       // printf("\n\rMBC1");
-      dump_MBC1();
+      GBC_dump_MBC(1);
       break;
 
     case 0x05:
     case 0x06:
       // printf("\n\rMBC2");
-      dump_MBC1();    // Handled as MBC1 for now
+      GBC_dump_MBC(2);
       break;
 
     case 0x0B:
@@ -196,6 +196,7 @@ void GBC_dump_cart(void){
     case 0x12:
     case 0x13:
       // printf("\n\rMBC3");
+      GBC_dump_MBC(3);
       break;
 
     case 0x19:
@@ -205,15 +206,17 @@ void GBC_dump_cart(void){
     case 0x1D:
     case 0x1E:
       // printf("\n\rMBC5");
-      dump_MBC5();
+      GBC_dump_MBC(5);
       break;
 
     case 0x20:
       // printf("\n\rMBC6");
+      GBC_dump_MBC(6);
       break;
 
     case 0x22:
       // printf("\n\rMBC7");
+      GBC_dump_MBC(7);
       break;
     
     default:
@@ -224,43 +227,31 @@ void GBC_dump_cart(void){
   f_close(&file);
 }
 
-// MBC0 (No MBC) 32KiB Only
-void dump_MBC0(void) {
+void GBC_dump_MBC(uint8_t mbc_type) {
+  uint8_t rom_size = GBC_read(0x0148);
+  uint32_t banks = 2 << rom_size;
   buf_index = 0;
 
-  for (uint16_t addr = 0x0000; addr < 0x8000; addr++) {
-    gbc_buf[buf_index++] = GBC_read(addr);
-    if (buf_index == 512) {
-      FRESULT res = f_write(&file, gbc_buf, 512, &bw);
-      if (res != FR_OK || bw != 512) {
-        printf("f_write error = %d, wrote %u bytes\r\n", res, bw);
-        return;
-      }
-      buf_index = 0;
-    }
-  }
+  // Handle MBC6 special case
+  if (mbc_type == 6)
+    banks *= 2;
 
-  if (buf_index > 0) {
-    FRESULT res = f_write(&file, gbc_buf, buf_index, &bw);
-    if (res != FR_OK || bw != buf_index) {
-      printf("f_write (tail) error = %d, wrote %u bytes\r\n", res, bw);
-    }
-  }
-}
-
-
-
-
-// MBC1 2MiB Max
-void dump_MBC1(void) {
-  uint8_t rom_size = GBC_read(0x0148);
-  uint32_t banks = 2 << rom_size;
-
-  for (uint16_t i = 1; i < banks; i++) {
-    bank_switch(i, 1);
+  for (uint16_t i = (mbc_type == 0 ? 0 : 1); i < banks; i++) {
+    bank_switch(i, mbc_type);
     buf_index = 0;
 
-    for (int addr = 0x4000; addr < 0x8000; addr++) {
+    // Most MBCs have 0x4000 - 0x7FFF
+    uint16_t start = 0x4000;
+    uint16_t end = 0x8000;
+
+    if (mbc_type == 0) {
+      start = 0x0000;
+      end = 0x8000;
+    } else if (mbc_type == 6) {
+      end = 0x6000; // MBC6 is 0x4000–0x5FFF
+    }
+
+    for (uint32_t addr = start; addr < end; addr++) {
       gbc_buf[buf_index++] = GBC_read(addr);
       if (buf_index == 512) {
         FRESULT res = f_write(&file, gbc_buf, 512, &bw);
@@ -272,173 +263,7 @@ void dump_MBC1(void) {
       }
     }
 
-    if (buf_index > 0) {
-      FRESULT res = f_write(&file, gbc_buf, buf_index, &bw);
-      if (res != FR_OK || bw != buf_index) {
-        printf("f_write (tail) error = %d, wrote %u bytes\r\n", res, bw);
-        return;
-      }
-    }
-  }
-}
-
-
-
-// MBC2 up to 256Kib
-void dump_MBC2(void) {
-  uint8_t rom_size = GBC_read(0x0148);
-  uint32_t banks = 2 << rom_size;
-
-  for (uint16_t i = 1; i < banks; i++) {
-    bank_switch(i, 2);
-    buf_index = 0;
-
-    for (int addr = 0x4000; addr < 0x8000; addr++) {
-      gbc_buf[buf_index++] = GBC_read(addr);
-      if (buf_index == 512) {
-        FRESULT res = f_write(&file, gbc_buf, 512, &bw);
-        if (res != FR_OK || bw != 512) {
-          printf("f_write error = %d, wrote %u bytes\r\n", res, bw);
-          return;
-        }
-        buf_index = 0;
-      }
-    }
-
-    if (buf_index > 0) {
-      FRESULT res = f_write(&file, gbc_buf, buf_index, &bw);
-      if (res != FR_OK || bw != buf_index) {
-        printf("f_write (tail) error = %d, wrote %u bytes\r\n", res, bw);
-        return;
-      }
-    }
-  }
-}
-
-
-
-// MBC3 up to 2MiB - Essentially the same as MBC1 and MBC2 other than switching and RAM
-void dump_MBC3(void) {
-  uint8_t rom_size = GBC_read(0x0148);
-  uint32_t banks = 2 << rom_size;
-
-  for (uint16_t i = 1; i < banks; i++) {
-    bank_switch(i, 3);
-    buf_index = 0;
-
-    for (int addr = 0x4000; addr < 0x8000; addr++) {
-      gbc_buf[buf_index++] = GBC_read(addr);
-      if (buf_index == 512) {
-        FRESULT res = f_write(&file, gbc_buf, 512, &bw);
-        if (res != FR_OK || bw != 512) {
-          printf("f_write error = %d, wrote %u bytes\r\n", res, bw);
-          return;
-        }
-        buf_index = 0;
-      }
-    }
-
-    if (buf_index > 0) {
-      FRESULT res = f_write(&file, gbc_buf, buf_index, &bw);
-      if (res != FR_OK || bw != buf_index) {
-        printf("f_write (tail) error = %d, wrote %u bytes\r\n", res, bw);
-        return;
-      }
-    }
-  }
-}
-
-
-
-void dump_MBC5(void) {
-  uint8_t rom_size = GBC_read(0x0148);    // Read ROM size
-  uint32_t banks = 2 << rom_size;         // Convert size code to # of banks
-  uint8_t buffer[512];
-  UINT bw;
-
-  for (uint16_t i = 0; i < banks; i++) {
-    bank_switch(i, 5);
-    uint16_t buf_index = 0;
-
-    for (int addr = 0x4000; addr < 0x8000; addr++) {
-      buffer[buf_index++] = GBC_read(addr);
-
-      if (buf_index == 512) {
-        FRESULT res = f_write(&file, buffer, 512, &bw);
-        if (res != FR_OK || bw != 512) {
-          printf("f_write error = %d, wrote %u bytes\r\n", res, bw);
-          return;
-        }
-        buf_index = 0;
-      }
-    }
-
-    // Write remaining (if any)
-    if (buf_index > 0) {
-      FRESULT res = f_write(&file, buffer, buf_index, &bw);
-      if (res != FR_OK || bw != buf_index) {
-        printf("f_write (tail) error = %d, wrote %u bytes\r\n", res, bw);
-        return;
-      }
-    }
-  }
-}
-
-
-// MBC6 2 swappable "half" banks, we'll use 0x4000 - 0x5FFF
-void dump_MBC6(void) {
-  uint8_t rom_size = GBC_read(0x0148);
-  uint32_t banks = (2 << rom_size) * 2;
-
-  for (uint16_t i = 0; i < banks; i++) {
-    bank_switch(i, 6);
-    buf_index = 0;
-
-    for (int addr = 0x4000; addr < 0x6000; addr++) {
-      gbc_buf[buf_index++] = GBC_read(addr);
-      if (buf_index == 512) {
-        FRESULT res = f_write(&file, gbc_buf, 512, &bw);
-        if (res != FR_OK || bw != 512) {
-          printf("f_write error = %d, wrote %u bytes\r\n", res, bw);
-          return;
-        }
-        buf_index = 0;
-      }
-    }
-
-    if (buf_index > 0) {
-      FRESULT res = f_write(&file, gbc_buf, buf_index, &bw);
-      if (res != FR_OK || bw != buf_index) {
-        printf("f_write (tail) error = %d, wrote %u bytes\r\n", res, bw);
-        return;
-      }
-    }
-  }
-}
-
-
-
-// MBC7 - Bank 0 swapping unconfirmed, use 0x0000 - 0x3FFF if issues
-void dump_MBC7(void) {
-  uint8_t rom_size = GBC_read(0x0148);
-  uint32_t banks = 2 << rom_size;
-
-  for (uint16_t i = 0; i < banks; i++) {
-    bank_switch(i, 7);
-    buf_index = 0;
-
-    for (int addr = 0x4000; addr < 0x8000; addr++) {
-      gbc_buf[buf_index++] = GBC_read(addr);
-      if (buf_index == 512) {
-        FRESULT res = f_write(&file, gbc_buf, 512, &bw);
-        if (res != FR_OK || bw != 512) {
-          printf("f_write error = %d, wrote %u bytes\r\n", res, bw);
-          return;
-        }
-        buf_index = 0;
-      }
-    }
-
+    // Write any remaining data
     if (buf_index > 0) {
       FRESULT res = f_write(&file, gbc_buf, buf_index, &bw);
       if (res != FR_OK || bw != buf_index) {
