@@ -52,14 +52,15 @@ The stock STM32F072 Discovery must be tweaked to expose additional GPIO lines:
 | System | Status | Notes |
 |--------|--------|-------|
 | **Game Boy / Game Boy Color** |  | |
-| &nbsp;&nbsp;MBC1 | ✔ Implemented *(untested)* |
-| &nbsp;&nbsp;MBC2 | ✔ Implemented *(untested)* |
-| &nbsp;&nbsp;MBC3 | ✔ Implemented *(untested)* |
-| &nbsp;&nbsp;MBC5 | ✔ Implemented & **tested** |
-| &nbsp;&nbsp;MBC6 | ✔ Implemented *(untested)* |
-| &nbsp;&nbsp;MBC7 | ✔ Implemented *(untested)* |
-| &nbsp;&nbsp;Other/rare MBCs | ✖ Not yet |
-| **Game Boy Advance** | ✔ Full dumps (32 MiB assumed) |
+| &nbsp;&nbsp;No MBC | ✔ Implemented *(untested)*  |                                       |
+| &nbsp;&nbsp;MBC1 | ✔ Implemented *(untested)*    |                                       |
+| &nbsp;&nbsp;MBC2 | ✔ Implemented *(untested)*    |                                       |
+| &nbsp;&nbsp;MBC3 | ✔ Implemented *(untested)*    | Pokemon, etc.                         |
+| &nbsp;&nbsp;MBC5 | ✔ Implemented & **tested**    | Almost all later games                |
+| &nbsp;&nbsp;MBC6 | ✔ Implemented *(untested)*    |                                       |
+| &nbsp;&nbsp;MBC7 | ✔ Implemented *(untested)*    |                                       |
+| &nbsp;&nbsp;Other/rare MBCs                      | ✖ Not yet | Handful of known games    |
+| **Game Boy Advance** | ✔ Full dumps (32 MiB assumed) |                                   |
 
 ### Dumping Options
 * **USB‑CDC** – streams data over 1 Mbaud VCP; proven with GBA cartridges.  
@@ -76,7 +77,6 @@ cd ROM‑dumper
 # create virtual environment for host tools
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r Tools/requirements.txt
 
 # build firmware (requires arm‑gcc & stm32cubemx)
 pio run -t upload
